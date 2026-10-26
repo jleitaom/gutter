@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build app
         run: ./build.sh
       - uses: actions/upload-artifact@v4
