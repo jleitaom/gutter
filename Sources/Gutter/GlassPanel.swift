@@ -31,12 +31,17 @@ final class GlassPanel: NSPanel {
     }
 
     func setContent(_ view: NSView) {
+        // NSGlassEffectView needs the macOS 26 SDK (Swift 6.2+); older toolchains build the frosted fallback.
+        #if compiler(>=6.2)
         if #available(macOS 26, *) {
             let glass = NSGlassEffectView()
             glass.cornerRadius = Self.cornerRadius
             glass.contentView = view
             contentView = glass
-        } else {
+            return
+        }
+        #endif
+        do {
             let material = NSVisualEffectView()
             material.material = .popover
             material.blendingMode = .behindWindow
