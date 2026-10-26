@@ -1,0 +1,40 @@
+name: Release
+
+# Push a tag like v0.1.0 to build, package and publish a GitHub release.
+# Every file gets a SHA-256 checksum and a signed build provenance attestation,
+# so anyone can verify a download was built by this workflow from this repo:
+#   gh attestation verify Gutter-0.1.0.dmg --repo jleitaom/gutter
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Package
+        run: scripts/package.sh "${GITHUB_REF_NAME#v}"
+
+      # Free attestations are only available for public repositories.
+      - name: Attest build provenance
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.dmg
+            dist/*.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

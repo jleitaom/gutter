@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build app
+        run: ./build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Gutter.app
+          path: build/Gutter.app
