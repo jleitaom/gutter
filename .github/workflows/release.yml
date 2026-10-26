@@ -27,7 +27,7 @@ jobs:
       # Free attestations are only available for public repositories.
       - name: Attest build provenance
         if: ${{ !github.event.repository.private }}
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/*.dmg
