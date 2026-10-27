@@ -268,9 +268,9 @@ final class WindowManager: ObservableObject {
         return true
     }
 
-    /// The display's margins, minus the left gap when the Stage Manager strip is hidden.
+    /// The display's margins (limited to its size), minus the left gap when the Stage Manager strip is hidden.
     func effectiveMargins(for screen: NSScreen) -> Margins {
-        var margins = prefs.margins(for: screen.displayUUID)
+        var margins = prefs.margins(for: screen.displayUUID).limited(to: screen.visibleFrame.size)
         if prefs.fullWidthWhenStripHidden && stageManagerOn && stripHidden {
             margins.left = 0
         }

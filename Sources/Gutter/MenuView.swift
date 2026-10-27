@@ -109,10 +109,12 @@ struct MenuView: View {
                     .foregroundStyle(.secondary)
             }
             if showMargins {
+                let current = margins.wrappedValue
+                let limits = Margins.limits(left: current.left, top: current.top, in: visibleSize)
                 VStack(spacing: 8) {
-                    MarginSlider(label: "Top", value: margins.top, range: 0...500)
-                    MarginSlider(label: "Right", value: margins.right, range: 0...800)
-                    MarginSlider(label: "Bottom", value: margins.bottom, range: 0...500)
+                    MarginSlider(label: "Top", value: margins.top, range: 0...Swift.max(limits.top, 10))
+                    MarginSlider(label: "Right", value: margins.right, range: 0...Swift.max(limits.right, 10))
+                    MarginSlider(label: "Bottom", value: margins.bottom, range: 0...Swift.max(limits.bottom, 10))
                 }
                 .padding(.bottom, 10)
             }
@@ -299,10 +301,18 @@ struct MenuView: View {
         NSScreen.screens.first { $0.displayUUID == selectedDisplay } ?? NSScreen.main
     }
 
-    /// The margins of the display picked in the tabs (the main display with only one).
+    /// The visible area of the display picked in the tabs.
+    private var visibleSize: CGSize {
+        selectedScreen?.visibleFrame.size ?? CGSize(width: 1512, height: 944)
+    }
+
+    /// The margins of the display picked in the tabs (the main display with only one),
+    /// limited to that display's size so the panel shows what fitting will do.
     private var margins: Binding<Margins> {
         let id = selectedScreen?.displayUUID ?? selectedDisplay
-        return Binding(get: { prefs.margins(for: id) }, set: { prefs.setMargins($0, for: id) })
+        let size = visibleSize
+        return Binding(get: { prefs.margins(for: id).limited(to: size) },
+                       set: { prefs.setMargins($0.limited(to: size), for: id) })
     }
 
     private var previewHint: String {
@@ -576,7 +586,7 @@ private struct LayoutPreview: View {
     }
 
     /// Keeps the window at least half the screen wide.
-    private var maxGap: Double { min(600, (visible.width / 2 / 10).rounded(.down) * 10) }
+    private var maxGap: Double { Margins.limits(left: 0, top: 0, in: visible.size).left }
 
     private func setGap(_ value: Double) {
         margins.left = min(max((value / 10).rounded() * 10, 0), maxGap)
