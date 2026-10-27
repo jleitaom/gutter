@@ -4,9 +4,21 @@ name: Release
 # Every file gets a SHA-256 checksum and a signed build provenance attestation,
 # so anyone can verify a download was built by this workflow from this repo:
 #   gh attestation verify Gutter-0.1.0.dmg --repo jleitaom/gutter
+#
+# Builds are signed with the project's self-signed certificate (secrets SIGNING_CERT_P12
+# and SIGNING_CERT_PASSWORD), so every release has the same code identity and keeps the
+# Accessibility access people granted to the previous one.
+#
+# Run it by hand (Actions → Release → Run workflow) for a dry run: it builds and signs
+# the same way, and uploads the files as a workflow artifact instead of publishing.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version for the dry-run build
+        default: 0.0.0
 
 permissions: {}
 
@@ -17,18 +29,49 @@ jobs:
       contents: write
       id-token: write
       attestations: write
+    env:
+      SIGN_IDENTITY: Gutter Self-Signed
+      PUBLISH: ${{ startsWith(github.ref, 'refs/tags/v') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
           fetch-depth: 0 # build.sh numbers builds by commit count
 
+      # A temporary keychain that holds only the signing certificate, deleted at the end.
+      - name: Import signing certificate
+        env:
+          SIGNING_CERT_P12: ${{ secrets.SIGNING_CERT_P12 }}
+          SIGNING_CERT_PASSWORD: ${{ secrets.SIGNING_CERT_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          keychain_password=$(openssl rand -base64 24)
+          echo "$SIGNING_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$SIGNING_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          rm "$RUNNER_TEMP/cert.p12"
+          security find-identity -p codesigning "$keychain" | grep -q "\"$SIGN_IDENTITY\"" \
+            || { echo "::error::$SIGN_IDENTITY not found in the imported certificate"; exit 1; }
+
       - name: Package
-        run: scripts/package.sh "${GITHUB_REF_NAME#v}"
+        env:
+          VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+        run: scripts/package.sh "${VERSION#v}"
+
+      # Fails the release if the app ended up ad hoc signed, which would cost every user
+      # their Accessibility access on update.
+      - name: Check signature
+        run: |
+          codesign --verify --strict build/Gutter.app
+          codesign -dr - build/Gutter.app 2>&1 | tee /dev/stderr | grep -q "certificate leaf"
 
       # Free attestations are only available for public repositories.
       - name: Attest build provenance
-        if: ${{ !github.event.repository.private }}
+        if: ${{ env.PUBLISH == 'true' && !github.event.repository.private }}
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: |
@@ -36,7 +79,19 @@ jobs:
             dist/*.zip
 
       - name: Publish release
+        if: ${{ env.PUBLISH == 'true' }}
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           files: dist/*
           generate_release_notes: true
+
+      - name: Upload dry-run build
+        if: ${{ env.PUBLISH != 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: Gutter-dry-run
+          path: dist/*
+
+      - name: Delete signing keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true

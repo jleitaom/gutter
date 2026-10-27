@@ -14,4 +14,3 @@ Ideas queued for later versions.
 ## Before going public
 
 - **Update checks** via Sparkle (works without a paid Apple account), pointing at GitHub releases.
-- **Stable local signing** with a self-signed certificate, so rebuilds keep Accessibility access.

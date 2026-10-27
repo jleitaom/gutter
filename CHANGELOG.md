@@ -7,6 +7,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
+- Releases are signed with a stable self-signed certificate, so updating Gutter keeps its Accessibility access
+- The release workflow can be run by hand as a dry run that builds and signs without publishing
 - Every build has its own build number (`CFBundleVersion`), counted from commits, so macOS and future update checks can tell versions apart
 
 ### Fixed
