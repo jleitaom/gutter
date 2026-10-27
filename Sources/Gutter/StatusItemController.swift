@@ -135,14 +135,14 @@ final class StatusItemController: NSObject {
             let displayID = screen.displayUUID
             let current = prefs.margins(for: displayID).left
             for preset in Margins.gapPresets {
-                menu.addItem(ActionItem("\(preset.name) · \(Int(preset.value)) px", checked: current == preset.value) {
+                menu.addItem(ActionItem("\(preset.name) · \(Int(preset.value)) pt", checked: current == preset.value) {
                     var margins = prefs.margins(for: displayID)
                     margins.left = preset.value
                     prefs.setMargins(margins, for: displayID)
                 })
             }
             if !Margins.gapPresets.contains(where: { $0.value == current }) {
-                let custom = NSMenuItem(title: "Custom · \(Int(current)) px", action: nil, keyEquivalent: "")
+                let custom = NSMenuItem(title: "Custom · \(Int(current)) pt", action: nil, keyEquivalent: "")
                 custom.state = .on
                 custom.isEnabled = false
                 menu.addItem(custom)

@@ -448,7 +448,7 @@ private struct MarginSlider: View {
     @Binding var value: Double
     let range: ClosedRange<Double>
 
-    /// Snaps to 10 px without `Slider(step:)`, which draws a tick mark for every step.
+    /// Snaps to 10 pt without `Slider(step:)`, which draws a tick mark for every step.
     private var snapped: Binding<Double> {
         Binding(get: { value }, set: { value = ($0 / 10).rounded() * 10 })
     }
@@ -636,7 +636,7 @@ private struct LayoutPreview: View {
                     .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
                     .position(x: win.minX + 2, y: win.midY)
 
-                Text("\(Int(margins.left)) px")
+                Text("\(Int(margins.left)) pt")
                     .font(.system(size: 10, weight: .semibold))
                     .monospacedDigit()
                     .foregroundStyle(.white)
@@ -673,7 +673,7 @@ private struct LayoutPreview: View {
         .onDisappear { setResizeCursor(false) }
         .accessibilityElement()
         .accessibilityLabel("Left gap")
-        .accessibilityValue("\(Int(margins.left)) pixels")
+        .accessibilityValue("\(Int(margins.left)) points")
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment: setGap(margins.left + 10)
