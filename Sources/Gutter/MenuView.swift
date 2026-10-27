@@ -23,7 +23,8 @@ struct MenuView: View {
             }
 
             if NSScreen.screens.count > 1 {
-                CapsulePicker(options: NSScreen.screens.map { ($0.localizedName, $0.displayUUID) },
+                CapsulePicker(title: "Display",
+                              options: NSScreen.screens.map { ($0.localizedName, $0.displayUUID) },
                               selection: $selectedDisplay)
             }
 
@@ -34,7 +35,7 @@ struct MenuView: View {
                     .foregroundStyle(.secondary)
             }
 
-            CapsulePicker(options: Margins.gapPresets.map { ($0.name, $0.value) }, selection: margins.left)
+            CapsulePicker(title: "Gap preset", options: Margins.gapPresets.map { ($0.name, $0.value) }, selection: margins.left)
 
             otherMargins
             stageManager
@@ -109,10 +110,12 @@ struct MenuView: View {
                     .foregroundStyle(.secondary)
             }
             if showMargins {
+                let current = margins.wrappedValue
+                let limits = Margins.limits(left: current.left, top: current.top, in: visibleSize)
                 VStack(spacing: 8) {
-                    MarginSlider(label: "Top", value: margins.top, range: 0...500)
-                    MarginSlider(label: "Right", value: margins.right, range: 0...800)
-                    MarginSlider(label: "Bottom", value: margins.bottom, range: 0...500)
+                    MarginSlider(label: "Top", value: margins.top, range: 0...Swift.max(limits.top, 10))
+                    MarginSlider(label: "Right", value: margins.right, range: 0...Swift.max(limits.right, 10))
+                    MarginSlider(label: "Bottom", value: margins.bottom, range: 0...Swift.max(limits.bottom, 10))
                 }
                 .padding(.bottom, 10)
             }
@@ -140,7 +143,14 @@ struct MenuView: View {
             .help("Fit windows again when you move them to another display, or when displays are connected or disconnected.")
             Divider()
             Row(icon: "keyboard", title: "Shortcut") {
-                KeyCap("⌃⌥⌘F")
+                if manager.hotKeyInUse {
+                    Label("In use", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .help("Another app is using ⌃⌥⌘F. Quit it or change its shortcut, then turn this off and on.")
+                } else {
+                    KeyCap("⌃⌥⌘F")
+                }
                 SmallSwitch(title: "Shortcut", isOn: $prefs.hotKeyEnabled)
             }
             Divider()
@@ -234,7 +244,7 @@ struct MenuView: View {
             }
             .buttonStyle(CapsuleSecondaryButtonStyle())
             .fixedSize()
-            .help(prefs.hotKeyEnabled ? "Fit only this window (⌃⌥⌘F)" : "Fit only this window")
+            .help(prefs.hotKeyEnabled && !manager.hotKeyInUse ? "Fit only this window (⌃⌥⌘F)" : "Fit only this window")
             .disabled(manager.lastActiveApp == nil)
         }
         .disabled(!manager.accessibilityGranted)
@@ -292,10 +302,18 @@ struct MenuView: View {
         NSScreen.screens.first { $0.displayUUID == selectedDisplay } ?? NSScreen.main
     }
 
-    /// The margins of the display picked in the tabs (the main display with only one).
+    /// The visible area of the display picked in the tabs.
+    private var visibleSize: CGSize {
+        selectedScreen?.visibleFrame.size ?? CGSize(width: 1512, height: 944)
+    }
+
+    /// The margins of the display picked in the tabs (the main display with only one),
+    /// limited to that display's size so the panel shows what fitting will do.
     private var margins: Binding<Margins> {
         let id = selectedScreen?.displayUUID ?? selectedDisplay
-        return Binding(get: { prefs.margins(for: id) }, set: { prefs.setMargins($0, for: id) })
+        let size = visibleSize
+        return Binding(get: { prefs.margins(for: id).limited(to: size) },
+                       set: { prefs.setMargins($0.limited(to: size), for: id) })
     }
 
     private var previewHint: String {
@@ -431,7 +449,7 @@ private struct MarginSlider: View {
     @Binding var value: Double
     let range: ClosedRange<Double>
 
-    /// Snaps to 10 px without `Slider(step:)`, which draws a tick mark for every step.
+    /// Snaps to 10 pt without `Slider(step:)`, which draws a tick mark for every step.
     private var snapped: Binding<Double> {
         Binding(get: { value }, set: { value = ($0 / 10).rounded() * 10 })
     }
@@ -455,6 +473,8 @@ private struct MarginSlider: View {
 /// Capsule segmented control with a sliding selection. Used for displays and gap presets;
 /// nothing is highlighted when the selection matches no option.
 private struct CapsulePicker<Value: Hashable>: View {
+    /// What VoiceOver calls the group, e.g. "Display".
+    let title: String
     let options: [(label: String, value: Value)]
     @Binding var selection: Value
     @Namespace private var highlight
@@ -486,10 +506,13 @@ private struct CapsulePicker<Value: Hashable>: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
         .padding(3)
         .background(.primary.opacity(0.06), in: Capsule())
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
     }
 }
 
@@ -569,7 +592,7 @@ private struct LayoutPreview: View {
     }
 
     /// Keeps the window at least half the screen wide.
-    private var maxGap: Double { min(600, (visible.width / 2 / 10).rounded(.down) * 10) }
+    private var maxGap: Double { Margins.limits(left: 0, top: 0, in: visible.size).left }
 
     private func setGap(_ value: Double) {
         margins.left = min(max((value / 10).rounded() * 10, 0), maxGap)
@@ -619,7 +642,7 @@ private struct LayoutPreview: View {
                     .shadow(color: .black.opacity(0.3), radius: 3, y: 1)
                     .position(x: win.minX + 2, y: win.midY)
 
-                Text("\(Int(margins.left)) px")
+                Text("\(Int(margins.left)) pt")
                     .font(.system(size: 10, weight: .semibold))
                     .monospacedDigit()
                     .foregroundStyle(.white)
@@ -656,7 +679,7 @@ private struct LayoutPreview: View {
         .onDisappear { setResizeCursor(false) }
         .accessibilityElement()
         .accessibilityLabel("Left gap")
-        .accessibilityValue("\(Int(margins.left)) pixels")
+        .accessibilityValue("\(Int(margins.left)) points")
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment: setGap(margins.left + 10)

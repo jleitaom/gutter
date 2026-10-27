@@ -78,7 +78,7 @@ final class StatusItemController: NSObject {
         if let app = manager.lastActiveApp, let name = app.localizedName {
             let fitOne = ActionItem("Fit \(name) Window") { manager.fitLastActiveWindow() }
             fitOne.isEnabled = manager.accessibilityGranted
-            if prefs.hotKeyEnabled {
+            if prefs.hotKeyEnabled && !manager.hotKeyInUse {
                 // Shown for reference; the global shortcut works everywhere.
                 fitOne.keyEquivalent = "f"
                 fitOne.keyEquivalentModifierMask = [.control, .option, .command]
@@ -135,14 +135,14 @@ final class StatusItemController: NSObject {
             let displayID = screen.displayUUID
             let current = prefs.margins(for: displayID).left
             for preset in Margins.gapPresets {
-                menu.addItem(ActionItem("\(preset.name) · \(Int(preset.value)) px", checked: current == preset.value) {
+                menu.addItem(ActionItem("\(preset.name) · \(Int(preset.value)) pt", checked: current == preset.value) {
                     var margins = prefs.margins(for: displayID)
                     margins.left = preset.value
                     prefs.setMargins(margins, for: displayID)
                 })
             }
             if !Margins.gapPresets.contains(where: { $0.value == current }) {
-                let custom = NSMenuItem(title: "Custom · \(Int(current)) px", action: nil, keyEquivalent: "")
+                let custom = NSMenuItem(title: "Custom · \(Int(current)) pt", action: nil, keyEquivalent: "")
                 custom.state = .on
                 custom.isEnabled = false
                 menu.addItem(custom)
@@ -203,7 +203,9 @@ final class StatusItemController: NSObject {
         panel.show(below: anchor, on: buttonWindow.screen, size: contentSize)
         button.highlight(true)
 
-        // Clicks in other apps close the panel.
+        // Clicks in other apps close the panel. The panel can be shown while already open
+        // (reopening Gutter from Spotlight), so replace any monitor instead of adding a second.
+        if let monitor = outsideClickMonitor { NSEvent.removeMonitor(monitor) }
         outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.closePanel()
         }

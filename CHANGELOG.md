@@ -5,6 +5,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Changed
+
+- Every build has its own build number (`CFBundleVersion`), counted from commits, so macOS and future update checks can tell versions apart
+
+### Fixed
+
+- Gutter no longer freezes for seconds when an app stops responding during "Fit all windows" or at startup
+- The Shortcut row shows "In use" when ⌃⌥⌘F can't be registered because another app claimed it, instead of looking on while doing nothing
+- Margins can no longer add up to more than half of a display, which made fitting silently do nothing; the sliders and preview now show the real limits for each display
+- Gap sizes are labeled in points (pt), not pixels: 200 pt is 400 pixels on a Retina display
+- VoiceOver announces which display and gap preset are selected
+
 ## [0.1.0] - 2026-10-27
 
 First working version (not public yet).

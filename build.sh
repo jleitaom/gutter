@@ -6,6 +6,8 @@
 #
 # Environment:
 #   VERSION         overrides CFBundleShortVersionString (e.g. 1.2.0)
+#   BUILD_NUMBER    CFBundleVersion (default: the number of commits, so it grows with every
+#                   release; macOS and update checks compare this one)
 #   SIGN_IDENTITY   codesigning identity (default: "-" for ad-hoc)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -24,6 +26,8 @@ cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 if [[ -n "${VERSION:-}" ]]; then
     /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP/Contents/Info.plist"
 fi
+BUILD_NUMBER=${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Contents/Info.plist"
 
 codesign --force --options runtime --timestamp=none --sign "${SIGN_IDENTITY:--}" "$APP"
 echo "Built $APP"

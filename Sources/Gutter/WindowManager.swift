@@ -12,6 +12,8 @@ final class WindowManager: ObservableObject {
     @Published private(set) var stripHidden = false
     /// The last app that was frontmost, other than Gutter itself.
     @Published private(set) var lastActiveApp: NSRunningApplication?
+    /// True when the shortcut is on but couldn't be registered because another app holds it.
+    @Published var hotKeyInUse = false
 
     private let prefs = Preferences.shared
     private var observers: [pid_t: AXObserver] = [:]
@@ -23,6 +25,10 @@ final class WindowManager: ObservableObject {
     private var pendingMoveChecks: [AXUIElement: DispatchWorkItem] = [:]
 
     func start() {
+        // AX calls run on the main thread; a hung app shouldn't freeze Gutter for the default
+        // timeout of several seconds per call, so give up after half a second.
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.5)
+
         let nc = NSWorkspace.shared.notificationCenter
         nc.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
@@ -143,6 +149,8 @@ final class WindowManager: ObservableObject {
             windowCreated(window)
         case kAXWindowMovedNotification:
             windowMoved(window)
+        case kAXUIElementDestroyedNotification:
+            forget(window)
         default:
             break
         }
@@ -167,11 +175,27 @@ final class WindowManager: ObservableObject {
         AXUIElementGetPid(window, &pid)
         let display = screen.displayUUID
         let previous = windowDisplays[pid]?[window]
-        windowDisplays[pid, default: [:]][window] = display
+        remember(window, pid: pid, display: display)
 
         if let previous, previous != display, prefs.refitOnDisplayChange, shouldAutoFit(window) {
             fit(window)
         }
+    }
+
+    /// Records the window's display, and asks to hear when it closes so the entry can be dropped.
+    private func remember(_ window: AXUIElement, pid: pid_t, display: String) {
+        if windowDisplays[pid]?[window] == nil, let observer = observers[pid] {
+            AXObserverAddNotification(observer, window, kAXUIElementDestroyedNotification as CFString,
+                                      Unmanaged.passUnretained(self).toOpaque())
+        }
+        windowDisplays[pid, default: [:]][window] = display
+    }
+
+    private func forget(_ window: AXUIElement) {
+        var pid: pid_t = 0
+        AXUIElementGetPid(window, &pid)
+        windowDisplays[pid]?[window] = nil
+        pendingMoveChecks.removeValue(forKey: window)?.cancel()
     }
 
     fileprivate func windowCreated(_ window: AXUIElement) {
@@ -258,13 +282,13 @@ final class WindowManager: ObservableObject {
 
         var pid: pid_t = 0
         AXUIElementGetPid(window, &pid)
-        windowDisplays[pid, default: [:]][window] = screen.displayUUID
+        remember(window, pid: pid, display: screen.displayUUID)
         return true
     }
 
-    /// The display's margins, minus the left gap when the Stage Manager strip is hidden.
+    /// The display's margins (limited to its size), minus the left gap when the Stage Manager strip is hidden.
     func effectiveMargins(for screen: NSScreen) -> Margins {
-        var margins = prefs.margins(for: screen.displayUUID)
+        var margins = prefs.margins(for: screen.displayUUID).limited(to: screen.visibleFrame.size)
         if prefs.fullWidthWhenStripHidden && stageManagerOn && stripHidden {
             margins.left = 0
         }

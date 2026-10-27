@@ -24,11 +24,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Preferences.shared.$hotKeyEnabled
             .sink { [weak self] enabled in
+                self?.hotKey = nil // unregister first, so re-enabling doesn't collide with ourselves
                 self?.hotKey = enabled
                     ? HotKey(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(cmdKey | optionKey | controlKey)) {
                         WindowManager.shared.fitFrontmostWindow()
                     }
                     : nil
+                WindowManager.shared.hotKeyInUse = enabled && self?.hotKey == nil
             }
             .store(in: &cancellables)
     }
