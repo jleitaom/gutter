@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Changed
+
+- Every build has its own build number (`CFBundleVersion`), counted from commits, so macOS and future update checks can tell versions apart
+
 ### Fixed
 
 - Gutter no longer freezes for seconds when an app stops responding during "Fit all windows" or at startup
