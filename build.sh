@@ -8,7 +8,8 @@
 #   VERSION         overrides CFBundleShortVersionString (e.g. 1.2.0)
 #   BUILD_NUMBER    CFBundleVersion (default: the number of commits, so it grows with every
 #                   release; macOS and update checks compare this one)
-#   SIGN_IDENTITY   codesigning identity (default: "-" for ad-hoc)
+#   SIGN_IDENTITY   codesigning identity (default: "Gutter Self-Signed" when it's in your
+#                   keychain, so rebuilds keep Accessibility access; otherwise "-" for ad-hoc)
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -29,7 +30,14 @@ fi
 BUILD_NUMBER=${BUILD_NUMBER:-$(git rev-list --count HEAD 2>/dev/null || echo 1)}
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Contents/Info.plist"
 
-codesign --force --options runtime --timestamp=none --sign "${SIGN_IDENTITY:--}" "$APP"
+if [[ -z "${SIGN_IDENTITY:-}" ]]; then
+    SIGN_IDENTITY=-
+    if security find-identity -p codesigning 2>/dev/null | grep -q '"Gutter Self-Signed"'; then
+        SIGN_IDENTITY="Gutter Self-Signed"
+    fi
+fi
+codesign --force --options runtime --timestamp=none --sign "$SIGN_IDENTITY" "$APP"
+echo "Signed with: $SIGN_IDENTITY"
 echo "Built $APP"
 
 if [[ "${1:-}" == "--install" ]]; then

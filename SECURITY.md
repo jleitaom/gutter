@@ -24,6 +24,19 @@ shasum -a 256 Gutter-0.1.0.dmg
 
 Or skip downloads entirely and build from source with `./build.sh`.
 
+## Code signing
+
+Releases are signed with the project's self-signed certificate, `Gutter Self-Signed`, so
+every version has the same code identity and keeps the Accessibility access you granted. To
+check a downloaded app:
+
+```sh
+codesign -dr - /Applications/Gutter.app
+# designated => identifier "io.github.jleitaom.gutter" and certificate leaf = H"2842389dd54d9e20e7e29f768e76f707477741aa"
+```
+
+If a release ever shows a different certificate hash, don't install it and report it as below.
+
 ## Reporting a vulnerability
 
 Please don't open a public issue. Use GitHub's

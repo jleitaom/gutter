@@ -47,6 +47,9 @@ stays visible on every display, and you never touch a window edge again.
 4. Click the Gutter icon in the menu bar → **Grant Access…**, then turn Gutter on under
    **System Settings → Privacy & Security → Accessibility**.
 
+Updates keep that access: every release is signed with the same certificate, so macOS
+recognizes the new version as the same app.
+
 ### Why the warning?
 
 Gutter is free and isn't distributed through Apple's paid developer program, so macOS can't vouch
@@ -69,8 +72,11 @@ cd gutter
 ./build.sh --install    # builds, copies to /Applications and launches
 ```
 
-Local builds are ad-hoc signed, so macOS treats each rebuild as a new app. After rebuilding,
-remove Gutter from the Accessibility list (–) and add it again.
+Your builds are ad-hoc signed, so macOS treats each rebuild as a new app. After rebuilding,
+remove Gutter from the Accessibility list (–) and add it again. To avoid that, create a
+self-signed code signing certificate named `Gutter Self-Signed` in Keychain Access
+(Certificate Assistant → Create a Certificate, type Code Signing); `build.sh` uses it
+automatically.
 
 ## How it works
 
