@@ -23,6 +23,10 @@ final class WindowManager: ObservableObject {
     private var pendingMoveChecks: [AXUIElement: DispatchWorkItem] = [:]
 
     func start() {
+        // AX calls run on the main thread; a hung app shouldn't freeze Gutter for the default
+        // timeout of several seconds per call, so give up after half a second.
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.5)
+
         let nc = NSWorkspace.shared.notificationCenter
         nc.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
