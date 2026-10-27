@@ -23,7 +23,8 @@ struct MenuView: View {
             }
 
             if NSScreen.screens.count > 1 {
-                CapsulePicker(options: NSScreen.screens.map { ($0.localizedName, $0.displayUUID) },
+                CapsulePicker(title: "Display",
+                              options: NSScreen.screens.map { ($0.localizedName, $0.displayUUID) },
                               selection: $selectedDisplay)
             }
 
@@ -34,7 +35,7 @@ struct MenuView: View {
                     .foregroundStyle(.secondary)
             }
 
-            CapsulePicker(options: Margins.gapPresets.map { ($0.name, $0.value) }, selection: margins.left)
+            CapsulePicker(title: "Gap preset", options: Margins.gapPresets.map { ($0.name, $0.value) }, selection: margins.left)
 
             otherMargins
             stageManager
@@ -472,6 +473,8 @@ private struct MarginSlider: View {
 /// Capsule segmented control with a sliding selection. Used for displays and gap presets;
 /// nothing is highlighted when the selection matches no option.
 private struct CapsulePicker<Value: Hashable>: View {
+    /// What VoiceOver calls the group, e.g. "Display".
+    let title: String
     let options: [(label: String, value: Value)]
     @Binding var selection: Value
     @Namespace private var highlight
@@ -503,10 +506,13 @@ private struct CapsulePicker<Value: Hashable>: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
         .padding(3)
         .background(.primary.opacity(0.06), in: Capsule())
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
     }
 }
 
