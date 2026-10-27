@@ -1,5 +1,6 @@
 import AppKit
 import ApplicationServices
+import GutterKit
 
 /// Watches every app for new windows and windows moving between displays (via the
 /// Accessibility API) and resizes them to fill the screen minus that display's margins.
@@ -265,15 +266,8 @@ final class WindowManager: ObservableObject {
               let current = frame(of: window),
               let screen = screen(containing: current) else { return false }
 
-        let margins = effectiveMargins(for: screen)
-        let visible = axRect(screen.visibleFrame)
-        let target = CGRect(
-            x: visible.minX + margins.left,
-            y: visible.minY + margins.top,
-            width: visible.width - margins.left - margins.right,
-            height: visible.height - margins.top - margins.bottom
-        )
-        guard target.width >= 200, target.height >= 200 else { return false }
+        guard let target = WindowGeometry.targetFrame(axVisible: axRect(screen.visibleFrame),
+                                                      margins: effectiveMargins(for: screen)) else { return false }
 
         // Position, size, position: avoids the window being clamped when it grows past the screen edge.
         setPosition(window, target.origin)
@@ -288,26 +282,22 @@ final class WindowManager: ObservableObject {
 
     /// The display's margins (limited to its size), minus the left gap when the Stage Manager strip is hidden.
     func effectiveMargins(for screen: NSScreen) -> Margins {
-        var margins = prefs.margins(for: screen.displayUUID).limited(to: screen.visibleFrame.size)
-        if prefs.fullWidthWhenStripHidden && stageManagerOn && stripHidden {
-            margins.left = 0
-        }
-        return margins
+        WindowGeometry.effectiveMargins(prefs.margins(for: screen.displayUUID),
+                                        visibleSize: screen.visibleFrame.size,
+                                        stripHidden: prefs.fullWidthWhenStripHidden && stageManagerOn && stripHidden)
     }
 
     // MARK: - Geometry
 
     /// Converts an AppKit rect (bottom-left origin) to Accessibility coordinates (top-left origin of the primary screen).
     private func axRect(_ rect: CGRect) -> CGRect {
-        let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
-        return CGRect(x: rect.minX, y: primaryHeight - rect.maxY, width: rect.width, height: rect.height)
+        WindowGeometry.axRect(rect, primaryHeight: NSScreen.screens.first?.frame.height ?? 0)
     }
 
     private func screen(containing frame: CGRect) -> NSScreen? {
-        let center = CGPoint(x: frame.midX, y: frame.midY)
-        return NSScreen.screens.first { axRect($0.frame).contains(center) }
-            ?? NSScreen.screens.first { axRect($0.frame).contains(frame.origin) }
-            ?? NSScreen.main
+        let screens = NSScreen.screens
+        return WindowGeometry.displayIndex(containing: frame, axDisplays: screens.map { axRect($0.frame) })
+            .map { screens[$0] } ?? NSScreen.main
     }
 
     // MARK: - Accessibility helpers
