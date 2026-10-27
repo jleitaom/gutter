@@ -12,6 +12,8 @@ final class WindowManager: ObservableObject {
     @Published private(set) var stripHidden = false
     /// The last app that was frontmost, other than Gutter itself.
     @Published private(set) var lastActiveApp: NSRunningApplication?
+    /// True when the shortcut is on but couldn't be registered because another app holds it.
+    @Published var hotKeyInUse = false
 
     private let prefs = Preferences.shared
     private var observers: [pid_t: AXObserver] = [:]

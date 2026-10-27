@@ -78,7 +78,7 @@ final class StatusItemController: NSObject {
         if let app = manager.lastActiveApp, let name = app.localizedName {
             let fitOne = ActionItem("Fit \(name) Window") { manager.fitLastActiveWindow() }
             fitOne.isEnabled = manager.accessibilityGranted
-            if prefs.hotKeyEnabled {
+            if prefs.hotKeyEnabled && !manager.hotKeyInUse {
                 // Shown for reference; the global shortcut works everywhere.
                 fitOne.keyEquivalent = "f"
                 fitOne.keyEquivalentModifierMask = [.control, .option, .command]

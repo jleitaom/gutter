@@ -140,7 +140,14 @@ struct MenuView: View {
             .help("Fit windows again when you move them to another display, or when displays are connected or disconnected.")
             Divider()
             Row(icon: "keyboard", title: "Shortcut") {
-                KeyCap("⌃⌥⌘F")
+                if manager.hotKeyInUse {
+                    Label("In use", systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .help("Another app is using ⌃⌥⌘F. Quit it or change its shortcut, then turn this off and on.")
+                } else {
+                    KeyCap("⌃⌥⌘F")
+                }
                 SmallSwitch(title: "Shortcut", isOn: $prefs.hotKeyEnabled)
             }
             Divider()
@@ -234,7 +241,7 @@ struct MenuView: View {
             }
             .buttonStyle(CapsuleSecondaryButtonStyle())
             .fixedSize()
-            .help(prefs.hotKeyEnabled ? "Fit only this window (⌃⌥⌘F)" : "Fit only this window")
+            .help(prefs.hotKeyEnabled && !manager.hotKeyInUse ? "Fit only this window (⌃⌥⌘F)" : "Fit only this window")
             .disabled(manager.lastActiveApp == nil)
         }
         .disabled(!manager.accessibilityGranted)

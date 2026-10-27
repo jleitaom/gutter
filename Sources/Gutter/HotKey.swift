@@ -6,7 +6,9 @@ final class HotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
 
-    init(keyCode: UInt32, modifiers: UInt32, action: @escaping () -> Void) {
+    /// Fails when the shortcut can't be registered, e.g. another app holds it exclusively.
+    /// Apps that register the same shortcut non-exclusively can't be detected.
+    init?(keyCode: UInt32, modifiers: UInt32, action: @escaping () -> Void) {
         self.action = action
 
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
@@ -17,7 +19,13 @@ final class HotKey {
         }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &handlerRef)
 
         let id = EventHotKeyID(signature: OSType(0x4755_5452), id: 1) // "GUTR"
-        RegisterEventHotKey(keyCode, modifiers, id, GetApplicationEventTarget(), 0, &hotKeyRef)
+        // Exclusive, so registration fails (instead of silently sharing) when another app already claimed it.
+        let status = RegisterEventHotKey(keyCode, modifiers, id, GetApplicationEventTarget(),
+                                         OptionBits(kEventHotKeyExclusive), &hotKeyRef)
+        guard status == noErr else {
+            NSLog("Gutter: couldn't register the shortcut (\(status))")
+            return nil // deinit removes the event handler
+        }
     }
 
     deinit {

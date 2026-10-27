@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 ### Fixed
 
 - Gutter no longer freezes for seconds when an app stops responding during "Fit all windows" or at startup
+- The Shortcut row shows "In use" when ⌃⌥⌘F can't be registered because another app claimed it, instead of looking on while doing nothing
 
 ## [0.1.0] - 2026-10-27
 
