@@ -13,9 +13,33 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
       - name: Build app
         run: ./build.sh
+
+      - name: Unit tests
+        run: swift test
+
+      # The debug checks from CONTRIBUTING.md. --panel-test needs a menu bar to click, so it
+      # stays a local check.
+      - name: Right-click menu
+        run: swift run Gutter --menu-test
+
+      - name: Panel snapshots
+        run: |
+          mkdir -p snapshots
+          swift run Gutter --snapshot snapshots/panel-light.png
+          swift run Gutter --snapshot snapshots/panel-dark.png --dark
+          test -s snapshots/panel-light.png && test -s snapshots/panel-dark.png
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Gutter.app
           path: build/Gutter.app
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: panel-snapshots
+          path: snapshots/
+          if-no-files-found: ignore

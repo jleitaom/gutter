@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- Unit tests for the window-fitting math (margins, coordinates across displays, target frames), run in CI with the right-click menu check and panel snapshots
+
 ### Changed
 
 - Releases are signed with a stable self-signed certificate, so updating Gutter keeps its Accessibility access

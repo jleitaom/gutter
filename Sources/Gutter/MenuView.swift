@@ -1,4 +1,5 @@
 import AppKit
+import GutterKit
 import SwiftUI
 
 struct MenuView: View {
