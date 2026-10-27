@@ -149,6 +149,8 @@ final class WindowManager: ObservableObject {
             windowCreated(window)
         case kAXWindowMovedNotification:
             windowMoved(window)
+        case kAXUIElementDestroyedNotification:
+            forget(window)
         default:
             break
         }
@@ -173,11 +175,27 @@ final class WindowManager: ObservableObject {
         AXUIElementGetPid(window, &pid)
         let display = screen.displayUUID
         let previous = windowDisplays[pid]?[window]
-        windowDisplays[pid, default: [:]][window] = display
+        remember(window, pid: pid, display: display)
 
         if let previous, previous != display, prefs.refitOnDisplayChange, shouldAutoFit(window) {
             fit(window)
         }
+    }
+
+    /// Records the window's display, and asks to hear when it closes so the entry can be dropped.
+    private func remember(_ window: AXUIElement, pid: pid_t, display: String) {
+        if windowDisplays[pid]?[window] == nil, let observer = observers[pid] {
+            AXObserverAddNotification(observer, window, kAXUIElementDestroyedNotification as CFString,
+                                      Unmanaged.passUnretained(self).toOpaque())
+        }
+        windowDisplays[pid, default: [:]][window] = display
+    }
+
+    private func forget(_ window: AXUIElement) {
+        var pid: pid_t = 0
+        AXUIElementGetPid(window, &pid)
+        windowDisplays[pid]?[window] = nil
+        pendingMoveChecks.removeValue(forKey: window)?.cancel()
     }
 
     fileprivate func windowCreated(_ window: AXUIElement) {
@@ -264,7 +282,7 @@ final class WindowManager: ObservableObject {
 
         var pid: pid_t = 0
         AXUIElementGetPid(window, &pid)
-        windowDisplays[pid, default: [:]][window] = screen.displayUUID
+        remember(window, pid: pid, display: screen.displayUUID)
         return true
     }
 

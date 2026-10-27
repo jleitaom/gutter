@@ -203,7 +203,9 @@ final class StatusItemController: NSObject {
         panel.show(below: anchor, on: buttonWindow.screen, size: contentSize)
         button.highlight(true)
 
-        // Clicks in other apps close the panel.
+        // Clicks in other apps close the panel. The panel can be shown while already open
+        // (reopening Gutter from Spotlight), so replace any monitor instead of adding a second.
+        if let monitor = outsideClickMonitor { NSEvent.removeMonitor(monitor) }
         outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.closePanel()
         }
