@@ -183,33 +183,10 @@ struct MenuView: View {
 
     // MARK: - Status
 
-    private enum Status {
-        case active, paused, waiting, needsAccess
-
-        var color: Color {
-            switch self {
-            case .active: .green
-            case .paused: .secondary
-            case .waiting: .yellow
-            case .needsAccess: .orange
-            }
-        }
-    }
-
-    private var status: Status {
-        if !manager.accessibilityGranted { return .needsAccess }
-        if !prefs.autoFit { return .paused }
-        if prefs.onlyWithStageManager && !manager.stageManagerOn { return .waiting }
-        return .active
-    }
+    private var status: GutterStatus { manager.status }
 
     private var statusText: String {
-        switch status {
-        case .active: manager.stageManagerOn ? "Active · Stage Manager on" : "Active"
-        case .paused: "Paused"
-        case .waiting: "Waiting for Stage Manager"
-        case .needsAccess: "Needs access"
-        }
+        status == .active && manager.stageManagerOn ? "\(status.title) · Stage Manager on" : status.title
     }
 
     // MARK: - Displays
@@ -237,5 +214,17 @@ struct MenuView: View {
             return "Recent apps are hidden, so windows use the full width"
         }
         return "Drag the edge to set the gap"
+    }
+}
+
+private extension GutterStatus {
+    /// The dot next to the status in the panel header.
+    var color: Color {
+        switch self {
+        case .active: .green
+        case .paused: .secondary
+        case .waiting: .yellow
+        case .needsAccess: .orange
+        }
     }
 }

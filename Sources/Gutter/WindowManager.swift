@@ -16,6 +16,12 @@ final class WindowManager: ObservableObject {
     /// True when the shortcut is on but couldn't be registered because another app holds it.
     @Published var hotKeyInUse = false
 
+    /// What Gutter is doing right now, for the panel header and the right-click menu.
+    var status: GutterStatus {
+        GutterStatus(accessGranted: accessibilityGranted, autoFit: prefs.autoFit,
+                     onlyWithStageManager: prefs.onlyWithStageManager, stageManagerOn: stageManagerOn)
+    }
+
     private let prefs = Preferences.shared
     private var observers: [pid_t: AXObserver] = [:]
     private var observing = false

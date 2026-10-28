@@ -156,12 +156,7 @@ final class StatusItemController: NSObject {
     }
 
     private var statusText: String {
-        let manager = WindowManager.shared
-        let prefs = Preferences.shared
-        if !manager.accessibilityGranted { return "Gutter · Needs access" }
-        if !prefs.autoFit { return "Gutter · Paused" }
-        if prefs.onlyWithStageManager && !manager.stageManagerOn { return "Gutter · Waiting for Stage Manager" }
-        return "Gutter · Active"
+        "Gutter · \(WindowManager.shared.status.title)"
     }
 
     func openPanel() {
