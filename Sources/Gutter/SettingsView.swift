@@ -126,7 +126,7 @@ struct SettingsView: View {
             }
             Divider()
             Row(icon: "power", title: "Open at login") {
-                SmallSwitch(title: "Open at login", isOn: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
+                SmallSwitch(title: "Open at login", isOn: Binding(get: { launchAtLogin }, set: { setLaunchAtLogin($0) }))
             }
         }
     }
