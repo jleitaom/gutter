@@ -28,5 +28,9 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 José Leitão. MIT License.</string>
+	<key>SUFeedURL</key>
+	<string>https://github.com/jleitaom/gutter/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>8XCYc0KQ3UDgGVOg9/4NMfIxxL7spBX3XHpAcm3k5Rw=</string>
 </dict>
 </plist>

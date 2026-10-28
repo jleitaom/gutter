@@ -19,8 +19,11 @@ BIN_PATH=$(swift build "${BUILD_FLAGS[@]}" --show-bin-path)
 
 APP=build/Gutter.app
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Frameworks"
 cp "$BIN_PATH/Gutter" "$APP/Contents/MacOS/"
+ditto "$BIN_PATH/Sparkle.framework" "$APP/Contents/Frameworks/Sparkle.framework"
+# Sparkle's XPC services are only needed by sandboxed apps, and Gutter isn't sandboxed.
+rm -rf "$APP/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices"
 cp Resources/Info.plist "$APP/Contents/"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 
@@ -36,7 +39,13 @@ if [[ -z "${SIGN_IDENTITY:-}" ]]; then
         SIGN_IDENTITY="Gutter Self-Signed"
     fi
 fi
-codesign --force --options runtime --timestamp=none --sign "$SIGN_IDENTITY" "$APP"
+# Sign from the inside out with the same identity, so Sparkle's helpers and the app match.
+SPARKLE="$APP/Contents/Frameworks/Sparkle.framework"
+for part in "$SPARKLE/Versions/B/Autoupdate" "$SPARKLE/Versions/B/Updater.app" "$SPARKLE"; do
+    codesign --force --options runtime --timestamp=none --sign "$SIGN_IDENTITY" "$part"
+done
+codesign --force --options runtime --timestamp=none --entitlements Resources/Gutter.entitlements \
+    --sign "$SIGN_IDENTITY" "$APP"
 echo "Signed with: $SIGN_IDENTITY"
 echo "Built $APP"
 

@@ -41,7 +41,9 @@ stays visible on every display, and you never touch a window edge again.
 - **⌃⌥⌘F** fits the current window on demand
 - **Never resize** list for apps you'd rather leave alone
 - **Launch at login**
-- Native and lightweight. No network access, no tracking, no data collected.
+- **Settings window** (⌘,) for the options you set once
+- **Update checks** through GitHub, with your permission and a switch to turn them off
+- Native and lightweight. No tracking, no data collected. The only network access is the update check.
 
 ## Install
 
