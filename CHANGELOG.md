@@ -11,6 +11,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Changed
 
+- A Settings window (⌘,, or **Settings…** in the panel and the right-click menu) now holds the Stage Manager options, Refit on display change, Shortcut, Open at login and Never resize, so the panel is shorter
+- The panel ends with **Settings** and **Quit** buttons, with the version and GitHub link below them
 - Releases are signed with a stable self-signed certificate, so updating Gutter keeps its Accessibility access
 - The release workflow can be run by hand as a dry run that builds and signs without publishing
 - Every build has its own build number (`CFBundleVersion`), counted from commits, so macOS and future update checks can tell versions apart

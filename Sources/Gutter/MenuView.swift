@@ -3,14 +3,12 @@ import GutterKit
 import SwiftUI
 
 struct MenuView: View {
-    /// Shows a file picker for apps to exclude; provided by the panel's owner.
-    var chooseApps: () -> Void = {}
+    /// Opens the Settings window; provided by the panel's owner.
+    var openSettings: () -> Void = {}
 
     @EnvironmentObject private var prefs: Preferences
     @EnvironmentObject private var manager: WindowManager
-    @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var showMargins = false
-    @State private var showExclusions = false
     @State private var selectedDisplay = NSScreen.main?.displayUUID ?? ""
     /// Briefly shows how many windows "Fit all windows" fitted.
     @State private var fittedCount: Int?
@@ -39,18 +37,11 @@ struct MenuView: View {
             CapsulePicker(title: "Gap preset", options: Margins.gapPresets.map { ($0.name, $0.value) }, selection: margins.left)
 
             otherMargins
-            stageManager
-            general
-            exclusions
             fitButton
             footer
         }
         .padding(16)
         .frame(width: 340)
-        // The right-click menu can change this too, so re-read it whenever the panel opens.
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
-            launchAtLogin = LaunchAtLogin.isEnabled
-        }
     }
 
     // MARK: - Sections
@@ -123,102 +114,6 @@ struct MenuView: View {
         }
     }
 
-    private var stageManager: some View {
-        GlassGroup {
-            Row(icon: "sidebar.left", title: "Only with Stage Manager") {
-                SmallSwitch(title: "Only with Stage Manager", isOn: $prefs.onlyWithStageManager)
-            }
-            Divider()
-            Row(icon: "arrow.left.and.right", title: "Full width when strip is hidden") {
-                SmallSwitch(title: "Full width when strip is hidden", isOn: $prefs.fullWidthWhenStripHidden)
-            }
-            .help("If “Show recent apps” is off in Stage Manager settings, windows skip the left gap.")
-        }
-    }
-
-    private var general: some View {
-        GlassGroup {
-            Row(icon: "display.2", title: "Refit on display change") {
-                SmallSwitch(title: "Refit on display change", isOn: $prefs.refitOnDisplayChange)
-            }
-            .help("Fit windows again when you move them to another display, or when displays are connected or disconnected.")
-            Divider()
-            Row(icon: "keyboard", title: "Shortcut") {
-                if manager.hotKeyInUse {
-                    Label("In use", systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .help("Another app is using ⌃⌥⌘F. Quit it or change its shortcut, then turn this off and on.")
-                } else {
-                    KeyCap("⌃⌥⌘F")
-                }
-                SmallSwitch(title: "Shortcut", isOn: $prefs.hotKeyEnabled)
-            }
-            Divider()
-            Row(icon: "power", title: "Open at login") {
-                SmallSwitch(title: "Open at login", isOn: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
-            }
-        }
-    }
-
-    private var exclusions: some View {
-        GlassGroup {
-            DisclosureRow(icon: "nosign", title: "Never resize", isExpanded: $showExclusions) {
-                HStack(spacing: -6) {
-                    ForEach(prefs.excludedBundleIDs.prefix(3), id: \.self) { bundleID in
-                        if let icon = appIcon(bundleID) {
-                            Image(nsImage: icon).resizable().frame(width: 20, height: 20)
-                        }
-                    }
-                }
-                if prefs.excludedBundleIDs.isEmpty {
-                    Text("None").foregroundStyle(.secondary)
-                }
-            }
-            if showExclusions {
-                ForEach(prefs.excludedBundleIDs, id: \.self) { bundleID in
-                    Divider()
-                    HStack(spacing: 10) {
-                        if let icon = appIcon(bundleID) {
-                            Image(nsImage: icon).resizable().frame(width: 18, height: 18)
-                        }
-                        Text(appName(bundleID))
-                        Spacer()
-                        Button {
-                            withAnimation(.snappy) { prefs.excludedBundleIDs.removeAll { $0 == bundleID } }
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.tertiary)
-                        .help("Stop excluding \(appName(bundleID))")
-                    }
-                    .frame(minHeight: 32)
-                }
-                Divider()
-                Menu {
-                    Button("Choose from Applications…", action: chooseApps)
-                    if !excludableApps.isEmpty {
-                        Divider()
-                        Section("Running") {
-                            ForEach(excludableApps, id: \.self) { bundleID in
-                                Button(appName(bundleID)) {
-                                    withAnimation(.snappy) { prefs.excludedBundleIDs.append(bundleID) }
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    Label("Add App", systemImage: "plus")
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .fixedSize()
-                .frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
-            }
-        }
-    }
-
     private var fitButton: some View {
         HStack(spacing: 8) {
             Button {
@@ -252,18 +147,38 @@ struct MenuView: View {
     }
 
     private var footer: some View {
-        HStack(spacing: 12) {
-            Text("Gutter \(AppInfo.version)")
-            Spacer()
-            Link("GitHub", destination: AppInfo.repositoryURL)
-            Button("Quit") { NSApp.terminate(nil) }
-                .buttonStyle(.plain)
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Button(action: openSettings) {
+                    Label("Settings", systemImage: "gearshape")
+                        .frame(maxWidth: .infinity)
+                }
+                .keyboardShortcut(",")
+                .help("Open Gutter Settings (⌘,)")
+
+                Button { NSApp.terminate(nil) } label: {
+                    Label("Quit", systemImage: "power")
+                        .frame(maxWidth: .infinity)
+                }
                 .keyboardShortcut("q")
+                .help("Quit Gutter (⌘Q)")
+            }
+            .buttonStyle(CapsuleSecondaryButtonStyle())
+
+            HStack(spacing: 4) {
+                Text("Gutter \(AppInfo.version) ·")
+                Link(destination: AppInfo.repositoryURL) {
+                    HStack(spacing: 2) {
+                        Text("GitHub")
+                        Image(systemName: "arrow.up.right").font(.system(size: 8, weight: .semibold))
+                    }
+                }
+                .help("View the source on GitHub")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .tint(.secondary)
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .tint(.secondary)
-        .padding(.horizontal, 4)
     }
 
     // MARK: - Status
@@ -323,37 +238,12 @@ struct MenuView: View {
         }
         return "Drag the edge to set the gap"
     }
-
-    // MARK: - Helpers
-
-    /// Running regular apps that aren't excluded yet, sorted by name.
-    private var excludableApps: [String] {
-        let ids = NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular && $0.processIdentifier != getpid() }
-            .compactMap(\.bundleIdentifier)
-            .filter { !prefs.excludedBundleIDs.contains($0) }
-        return Array(Set(ids)).sorted { appName($0).localizedCaseInsensitiveCompare(appName($1)) == .orderedAscending }
-    }
-
-    private func appName(_ bundleID: String) -> String {
-        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?
-            .deletingPathExtension().lastPathComponent ?? bundleID
-    }
-
-    private func appIcon(_ bundleID: String) -> NSImage? {
-        NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID).map { NSWorkspace.shared.icon(forFile: $0.path) }
-    }
-
-    private func setLaunchAtLogin(_ enabled: Bool) {
-        LaunchAtLogin.set(enabled)
-        launchAtLogin = LaunchAtLogin.isEnabled
-    }
 }
 
 // MARK: - Components
 
 /// An inset, frosted group of rows, like the grouped lists in System Settings.
-private struct GlassGroup<Content: View>: View {
+struct GlassGroup<Content: View>: View {
     var tint: Color? = nil
     @ViewBuilder var content: () -> Content
     @Environment(\.colorScheme) private var colorScheme
@@ -373,7 +263,7 @@ private struct GlassGroup<Content: View>: View {
     }
 }
 
-private struct Row<Trailing: View>: View {
+struct Row<Trailing: View>: View {
     let icon: String
     let title: String
     @ViewBuilder var trailing: () -> Trailing
@@ -391,7 +281,7 @@ private struct Row<Trailing: View>: View {
     }
 }
 
-private struct DisclosureRow<Trailing: View>: View {
+struct DisclosureRow<Trailing: View>: View {
     let icon: String
     let title: String
     @Binding var isExpanded: Bool
@@ -414,7 +304,7 @@ private struct DisclosureRow<Trailing: View>: View {
     }
 }
 
-private struct SmallSwitch: View {
+struct SmallSwitch: View {
     let title: String
     @Binding var isOn: Bool
 
@@ -426,7 +316,7 @@ private struct SmallSwitch: View {
     }
 }
 
-private struct KeyCap: View {
+struct KeyCap: View {
     let keys: String
     var onAccent = false
 

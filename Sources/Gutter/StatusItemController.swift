@@ -14,7 +14,7 @@ final class StatusItemController: NSObject {
     override init() {
         super.init()
 
-        let content = MenuView(chooseApps: { [weak self] in self?.chooseAppsToExclude() })
+        let content = MenuView(openSettings: { [weak self] in self?.openSettings() })
             .environmentObject(Preferences.shared)
             .environmentObject(WindowManager.shared)
             .fixedSize()
@@ -113,6 +113,9 @@ final class StatusItemController: NSObject {
         menu.addItem(.separator())
 
         // App
+        let settings = ActionItem("Settings…") { [weak self] in self?.openSettings() }
+        settings.keyEquivalent = ","
+        menu.addItem(settings)
         menu.addItem(ActionItem("About Gutter") {
             NSApp.activate()
             NSApp.orderFrontStandardAboutPanel(nil)
@@ -165,28 +168,10 @@ final class StatusItemController: NSObject {
         showPanel()
     }
 
-    /// Lets the user pick any installed app to add to "Never resize".
-    private func chooseAppsToExclude() {
-        // The glass panel floats above everything, so step aside while the picker is up.
+    func openSettings() {
+        // The glass panel floats above everything, so step aside for the window.
         closePanel()
-
-        let picker = NSOpenPanel()
-        picker.title = "Never resize these apps"
-        picker.prompt = "Add"
-        picker.allowedContentTypes = [.application]
-        picker.allowsMultipleSelection = true
-        picker.canChooseDirectories = false
-        picker.directoryURL = URL(fileURLWithPath: "/Applications")
-
-        NSApp.activate()
-        if picker.runModal() == .OK {
-            let prefs = Preferences.shared
-            for bundleID in picker.urls.compactMap({ Bundle(url: $0)?.bundleIdentifier })
-            where !prefs.excludedBundleIDs.contains(bundleID) {
-                prefs.excludedBundleIDs.append(bundleID)
-            }
-        }
-        showPanel()
+        SettingsWindowController.shared.show()
     }
 
     // MARK: - Panel
