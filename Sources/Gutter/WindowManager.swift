@@ -16,6 +16,12 @@ final class WindowManager: ObservableObject {
     /// True when the shortcut is on but couldn't be registered because another app holds it.
     @Published var hotKeyInUse = false
 
+    /// What Gutter is doing right now, for the panel header and the right-click menu.
+    var status: GutterStatus {
+        GutterStatus(accessGranted: accessibilityGranted, autoFit: prefs.autoFit,
+                     onlyWithStageManager: prefs.onlyWithStageManager, stageManagerOn: stageManagerOn)
+    }
+
     private let prefs = Preferences.shared
     private var observers: [pid_t: AXObserver] = [:]
     private var observing = false
@@ -33,16 +39,16 @@ final class WindowManager: ObservableObject {
         let nc = NSWorkspace.shared.notificationCenter
         nc.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
-            self?.observe(app, justLaunched: true)
+            MainActor.assumeIsolated { self?.observe(app, justLaunched: true) }
         }
         nc.addObserver(forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
-            self?.stopObserving(app.processIdentifier)
+            MainActor.assumeIsolated { self?.stopObserving(app.processIdentifier) }
         }
         nc.addObserver(forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
                   app.processIdentifier != getpid() else { return }
-            self?.lastActiveApp = app
+            MainActor.assumeIsolated { self?.lastActiveApp = app }
         }
         lastActiveApp = NSWorkspace.shared.frontmostApplication
 
@@ -57,7 +63,9 @@ final class WindowManager: ObservableObject {
         }
 
         // Accessibility permission and Stage Manager can change at any time, so poll them.
-        statusTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in self?.refreshStatus() }
+        statusTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshStatus() }
+        }
         refreshStatus()
     }
 
@@ -359,7 +367,14 @@ final class WindowManager: ObservableObject {
     }
 }
 
-private func axCallback(_ observer: AXObserver, _ element: AXUIElement, _ notification: CFString, _ refcon: UnsafeMutableRawPointer?) {
+/// Runs on the main run loop, where the observers' sources are added.
+nonisolated private func axCallback(_ observer: AXObserver, _ element: AXUIElement, _ notification: CFString, _ refcon: UnsafeMutableRawPointer?) {
     guard let refcon else { return }
-    Unmanaged<WindowManager>.fromOpaque(refcon).takeUnretainedValue().handle(notification as String, for: element)
+    let manager = Unmanaged<WindowManager>.fromOpaque(refcon)
+    let name = notification as String
+    // Already on the main thread, so the element never crosses to another one.
+    nonisolated(unsafe) let element = element
+    MainActor.assumeIsolated {
+        manager.takeUnretainedValue().handle(name, for: element)
+    }
 }

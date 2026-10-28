@@ -3,8 +3,9 @@ import Carbon.HIToolbox
 /// A system-wide keyboard shortcut. Registered on init, unregistered on deinit.
 final class HotKey {
     private let action: () -> Void
-    private var hotKeyRef: EventHotKeyRef?
-    private var handlerRef: EventHandlerRef?
+    // Only touched on the main thread; `nonisolated(unsafe)` lets the nonisolated deinit release them.
+    nonisolated(unsafe) private var hotKeyRef: EventHotKeyRef?
+    nonisolated(unsafe) private var handlerRef: EventHandlerRef?
 
     /// Fails when the shortcut can't be registered, e.g. another app holds it exclusively.
     /// Apps that register the same shortcut non-exclusively can't be detected.
@@ -14,7 +15,8 @@ final class HotKey {
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         InstallEventHandler(GetApplicationEventTarget(), { _, _, userData in
             guard let userData else { return noErr }
-            Unmanaged<HotKey>.fromOpaque(userData).takeUnretainedValue().action()
+            // Carbon delivers hot key events on the main thread.
+            MainActor.assumeIsolated { Unmanaged<HotKey>.fromOpaque(userData).takeUnretainedValue().action() }
             return noErr
         }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &handlerRef)
 

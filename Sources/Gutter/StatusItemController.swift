@@ -156,12 +156,7 @@ final class StatusItemController: NSObject {
     }
 
     private var statusText: String {
-        let manager = WindowManager.shared
-        let prefs = Preferences.shared
-        if !manager.accessibilityGranted { return "Gutter · Needs access" }
-        if !prefs.autoFit { return "Gutter · Paused" }
-        if prefs.onlyWithStageManager && !manager.stageManagerOn { return "Gutter · Waiting for Stage Manager" }
-        return "Gutter · Active"
+        "Gutter · \(WindowManager.shared.status.title)"
     }
 
     func openPanel() {
@@ -217,10 +212,11 @@ final class StatusItemController: NSObject {
 }
 
 /// A menu item that runs a closure, optionally shown with a checkmark.
-private final class ActionItem: NSMenuItem {
-    private let handler: () -> Void
+/// `nonisolated` because NSMenuItem's initializers are; menus only run the handler on the main thread.
+nonisolated private final class ActionItem: NSMenuItem {
+    private let handler: @MainActor () -> Void
 
-    init(_ title: String, checked: Bool? = nil, handler: @escaping () -> Void) {
+    init(_ title: String, checked: Bool? = nil, handler: @escaping @MainActor () -> Void) {
         self.handler = handler
         super.init(title: title, action: #selector(run), keyEquivalent: "")
         target = self
@@ -232,6 +228,7 @@ private final class ActionItem: NSMenuItem {
     }
 
     @objc private func run() {
-        handler()
+        let handler = handler
+        MainActor.assumeIsolated { handler() }
     }
 }
