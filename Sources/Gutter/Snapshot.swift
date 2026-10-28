@@ -42,6 +42,15 @@ enum Snapshot {
         let output = URL(fileURLWithPath: args[index + 1])
         let dark = args.contains("--dark")
 
+        // `--settings` renders the Settings window's content on a plain window background.
+        if args.contains("--settings") {
+            let view = SettingsView()
+                .environmentObject(Preferences.shared)
+                .environmentObject(WindowManager.shared)
+                .background(Color(nsColor: .windowBackgroundColor))
+            return render(view, to: output, dark: dark)
+        }
+
         // Approximates the glass panel (which can't be captured offscreen) floating over a desktop.
         let shape = RoundedRectangle(cornerRadius: GlassPanel.cornerRadius, style: .continuous)
         let view = MenuView()
@@ -53,6 +62,10 @@ enum Snapshot {
             .padding(36)
             .background(LinearGradient(colors: [Color(red: 0.95, green: 0.72, blue: 0.52), Color(red: 0.25, green: 0.38, blue: 0.59)],
                                        startPoint: .topLeading, endPoint: .bottomTrailing))
+        return render(view, to: output, dark: dark)
+    }
+
+    private static func render(_ view: some View, to output: URL, dark: Bool) -> Bool {
         let hosting = NSHostingView(rootView: view)
         hosting.frame.size = hosting.fittingSize
 

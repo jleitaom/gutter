@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if Snapshot.runIfRequested() { return }
         #endif
 
+        NSApp.mainMenu = MainMenu.make()
         WindowManager.shared.start()
         statusItem = StatusItemController()
 
@@ -39,5 +40,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         statusItem?.openPanel()
         return false
+    }
+
+    /// ⌘, from the main menu, while the Settings window is in front.
+    @objc func showSettings(_ sender: Any?) {
+        statusItem?.openSettings()
     }
 }
