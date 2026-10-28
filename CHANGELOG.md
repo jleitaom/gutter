@@ -5,8 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-28
+
+First public release.
+
 ### Added
 
+- Homebrew: `brew install --cask jleitaom/tap/gutter`, kept up to date by the release workflow
+- Update checks with [Sparkle](https://sparkle-project.org): **Check for Updates…** in the right-click menu, and **Check for updates automatically** and **Check Now** in Settings. Sparkle asks before checking on its own, and updates must be signed with the project's key
 - Unit tests for the window-fitting math (margins, coordinates across displays, target frames), run in CI with the right-click menu check and panel snapshots
 
 ### Changed
@@ -15,6 +21,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 - The panel ends with **Settings** and **Quit** buttons, with the version and GitHub link below them
 - Releases are signed with a stable self-signed certificate, so updating Gutter keeps its Accessibility access
 - The release workflow can be run by hand as a dry run that builds and signs without publishing
+- The app is built in Swift 6 mode
 - Every build has its own build number (`CFBundleVersion`), counted from commits, so macOS and future update checks can tell versions apart
 
 ### Fixed

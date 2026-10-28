@@ -284,7 +284,10 @@ second display, press ⌃⌥⌘F, test with a paused app (1.2).
 
 ---
 
-## Phase 5: Code cleanup
+## Phase 5: Code cleanup (done)
+
+**Status (28 Oct 2026):** merged in PR #10. See `docs/architecture-review-2026-10-28.md`.
+`@Observable` is left for later.
 
 ### 5.1 Split MenuView.swift (723 lines)
 
@@ -312,6 +315,11 @@ Add `WindowManager.status` (an enum with `.active`, `.paused`, `.waiting`,
 ---
 
 ## Phase 6: Going public
+
+**Status (28 Oct 2026):** the screenshot, Homebrew tap, Sparkle, templates and topics are done.
+Free GitHub plans only offer branch protection, attestations and private vulnerability
+reporting on public repos, so those come right after the repo goes public, before the
+`v0.2.0` tag. The demo video is still José's to record.
 
 ### 6.1 Screenshot and demo
 

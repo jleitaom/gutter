@@ -62,6 +62,22 @@ jobs:
           VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
         run: scripts/package.sh "${VERSION#v}"
 
+      # The appcast Sparkle reads from the latest release (SUFeedURL in Info.plist), signed
+      # with the project's EdDSA key so the app only installs updates built here.
+      - name: Write appcast
+        env:
+          VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          version="${VERSION#v}"
+          build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" build/Gutter.app/Contents/Info.plist)
+          export SPARKLE_KEY_FILE="$RUNNER_TEMP/sparkle.key"
+          (umask 077 && printf '%s' "$SPARKLE_PRIVATE_KEY" > "$SPARKLE_KEY_FILE")
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${version}/Gutter-${version}.zip"
+          scripts/appcast.sh "$version" "$build" "dist/Gutter-${version}.zip" "$url" > dist/appcast.xml
+          rm -f "$SPARKLE_KEY_FILE"
+          cat dist/appcast.xml
+
       # Fails the release if the app ended up ad hoc signed, which would cost every user
       # their Accessibility access on update.
       - name: Check signature
@@ -84,6 +100,33 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
+
+      # Pushes the new version to jleitaom/homebrew-tap with a deploy key that can only write
+      # to that repo (secret TAP_DEPLOY_KEY).
+      - name: Update Homebrew tap
+        if: ${{ env.PUBLISH == 'true' }}
+        env:
+          VERSION: ${{ github.ref_name }}
+          TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
+        run: |
+          version="${VERSION#v}"
+          sha=$(shasum -a 256 "dist/Gutter-${version}.zip" | cut -d' ' -f1)
+          key="$RUNNER_TEMP/tap_key"
+          known_hosts="$RUNNER_TEMP/known_hosts"
+          (umask 077 && printf '%s\n' "$TAP_DEPLOY_KEY" > "$key")
+          # GitHub's published host key (api.github.com/meta), so the push can't be redirected.
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > "$known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o UserKnownHostsFile=$known_hosts -o StrictHostKeyChecking=yes"
+          git clone --depth 1 git@github.com:jleitaom/homebrew-tap.git "$RUNNER_TEMP/tap"
+          mkdir -p "$RUNNER_TEMP/tap/Casks"
+          scripts/cask.sh "$version" "$sha" > "$RUNNER_TEMP/tap/Casks/gutter.rb"
+          cd "$RUNNER_TEMP/tap"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/gutter.rb
+          git commit -m "gutter $version"
+          git push
+          rm -f "$key"
 
       - name: Upload dry-run build
         if: ${{ env.PUBLISH != 'true' }}

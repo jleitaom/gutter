@@ -76,12 +76,14 @@ struct SettingsView: View {
     @EnvironmentObject private var manager: WindowManager
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var showExclusions = false
+    @ObservedObject private var updater = Updater.shared
 
     var body: some View {
         VStack(spacing: 12) {
             stageManager
             general
             exclusions
+            updates
         }
         .padding(16)
         .frame(width: 340)
@@ -127,6 +129,24 @@ struct SettingsView: View {
             Divider()
             Row(icon: "power", title: "Open at login") {
                 SmallSwitch(title: "Open at login", isOn: Binding(get: { launchAtLogin }, set: { setLaunchAtLogin($0) }))
+            }
+        }
+    }
+
+    private var updates: some View {
+        GlassGroup {
+            Row(icon: "arrow.down.circle", title: "Check for updates automatically") {
+                SmallSwitch(title: "Check for updates automatically",
+                            isOn: Binding(get: { updater.automaticallyChecks }, set: { updater.automaticallyChecks = $0 }))
+                    .disabled(!updater.isAvailable)
+            }
+            .help("Once a day, Gutter asks GitHub whether there's a newer release. Nothing about you or your Mac is sent.")
+            Divider()
+            Row(icon: "info.circle", title: "Gutter \(AppInfo.version)") {
+                Button("Check Now") { updater.checkForUpdates() }
+                    .controlSize(.small)
+                    .disabled(!updater.canCheck)
+                    .help("Check GitHub for a newer version of Gutter")
             }
         }
     }

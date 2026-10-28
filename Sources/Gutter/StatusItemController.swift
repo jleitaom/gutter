@@ -116,6 +116,9 @@ final class StatusItemController: NSObject {
         let settings = ActionItem("Settings…") { [weak self] in self?.openSettings() }
         settings.keyEquivalent = ","
         menu.addItem(settings)
+        let updates = ActionItem("Check for Updates…") { Updater.shared.checkForUpdates() }
+        updates.isEnabled = Updater.shared.canCheck
+        menu.addItem(updates)
         menu.addItem(ActionItem("About Gutter") {
             NSApp.activate()
             NSApp.orderFrontStandardAboutPanel(nil)

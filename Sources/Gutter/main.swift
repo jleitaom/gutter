@@ -22,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.mainMenu = MainMenu.make()
         WindowManager.shared.start()
         statusItem = StatusItemController()
+        _ = Updater.shared // starts Sparkle's scheduled checks
 
         Preferences.shared.$hotKeyEnabled
             .sink { [weak self] enabled in
