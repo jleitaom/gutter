@@ -14,4 +14,4 @@ labels: bug
 
 **Displays** (how many, resolutions, which one the window opened on):
 
-**Gutter version** (shown at the bottom of the menu):
+**Gutter version** (shown at the bottom of the panel):
