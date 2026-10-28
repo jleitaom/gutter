@@ -64,7 +64,8 @@ See [SECURITY.md](SECURITY.md) for details, or build it yourself (below).
 
 ## Build from source
 
-Requires macOS 14+ and Xcode 15+ (or the Swift toolchain).
+Building needs Xcode 26 or later (Swift 6.2), or the matching Swift toolchain. The app itself
+runs on macOS 14 and later.
 
 ```sh
 git clone https://github.com/jleitaom/gutter.git

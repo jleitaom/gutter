@@ -87,9 +87,11 @@ final class GlassPanel: NSPanel {
             context.duration = 0.12
             animator().alphaValue = 0
         }, completionHandler: { [weak self] in
-            // Skip if the panel was reopened while fading out.
-            guard let self, dismissing else { return }
-            orderOut(nil)
+            MainActor.assumeIsolated {
+                // Skip if the panel was reopened while fading out.
+                guard let self, self.dismissing else { return }
+                self.orderOut(nil)
+            }
         })
     }
 }

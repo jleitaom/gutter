@@ -34,7 +34,7 @@ Proof of same behavior: new unit tests for each combination; snapshots and `--me
 unchanged.
 Plan: 1) add the type and its tests, 2) move both callers to it and delete the copies.
 
-## Swift 6 language mode  [Worth exploring]
+## Swift 6 language mode  [Done]
 
 Files: `Package.swift`, `WindowManager.swift`, `Preferences.swift`, `HotKey.swift`,
 `StatusItemController.swift`
@@ -46,6 +46,11 @@ Proof of same behavior: no warnings in Swift 6 mode, all checks above, and a ses
 installed build (new windows fit, ⌃⌥⌘F works, display changes refit).
 Plan: 1) tools version 6.0 with Swift 5 mode and fix warnings, 2) annotate and switch to
 Swift 6 mode, 3) optionally `@Observable`.
+Result: tools version 6.2 with `.defaultIsolation(MainActor.self)` on the app target, instead of
+annotating each class, since everything in it is UI. Seven callbacks enter the main actor with
+`MainActor.assumeIsolated`; `ActionItem` is `nonisolated` because NSMenuItem's initializers are.
+No warnings in debug or release; snapshots and `--menu-test` are byte-identical. `@Observable`
+is left for later: it changes how every view observes state, so it gets its own step.
 
 ## Top recommendation
 

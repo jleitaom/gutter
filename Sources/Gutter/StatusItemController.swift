@@ -212,10 +212,11 @@ final class StatusItemController: NSObject {
 }
 
 /// A menu item that runs a closure, optionally shown with a checkmark.
-private final class ActionItem: NSMenuItem {
-    private let handler: () -> Void
+/// `nonisolated` because NSMenuItem's initializers are; menus only run the handler on the main thread.
+nonisolated private final class ActionItem: NSMenuItem {
+    private let handler: @MainActor () -> Void
 
-    init(_ title: String, checked: Bool? = nil, handler: @escaping () -> Void) {
+    init(_ title: String, checked: Bool? = nil, handler: @escaping @MainActor () -> Void) {
         self.handler = handler
         super.init(title: title, action: #selector(run), keyEquivalent: "")
         target = self
@@ -227,6 +228,7 @@ private final class ActionItem: NSMenuItem {
     }
 
     @objc private func run() {
-        handler()
+        let handler = handler
+        MainActor.assumeIsolated { handler() }
     }
 }
