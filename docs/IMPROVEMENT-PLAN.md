@@ -314,12 +314,14 @@ Add `WindowManager.status` (an enum with `.active`, `.paused`, `.waiting`,
 
 ---
 
-## Phase 6: Going public
+## Phase 6: Going public (done, except the demo video)
 
-**Status (28 Oct 2026):** the screenshot, Homebrew tap, Sparkle, templates and topics are done.
-Free GitHub plans only offer branch protection, attestations and private vulnerability
-reporting on public repos, so those come right after the repo goes public, before the
-`v0.2.0` tag. The demo video is still José's to record.
+**Status (28 Oct 2026):** Gutter 0.2.0 is released and the repo is public. Releases carry
+attestations, checksums and a signed Sparkle appcast, and update `jleitaom/homebrew-tap`.
+`main` requires the CI check and blocks force pushes; private vulnerability reporting is on.
+Checked from a fresh download: checksums, attestations for the zip and dmg, the appcast signature
+and feed URL, and `brew install --cask jleitaom/tap/gutter`. The demo video (6.1) is still to be
+recorded, then added to the README.
 
 ### 6.1 Screenshot and demo
 
