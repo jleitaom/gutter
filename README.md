@@ -47,15 +47,23 @@ stays visible on every display, and you never touch a window edge again.
 
 ## Install
 
-1. Download `Gutter-x.y.z.dmg` from the [latest release](https://github.com/jleitaom/gutter/releases/latest).
-2. Drag **Gutter** into **Applications** and open it.
-3. macOS will say it can't verify the app. Open **System Settings → Privacy & Security**, scroll
+With [Homebrew](https://brew.sh):
+
+```sh
+brew install --cask jleitaom/tap/gutter
+```
+
+Or download `Gutter-x.y.z.dmg` from the [latest release](https://github.com/jleitaom/gutter/releases/latest)
+and drag **Gutter** into **Applications**. Then:
+
+1. Open Gutter. macOS will say it can't verify the app. Open **System Settings → Privacy & Security**, scroll
    down and click **Open Anyway**. You only need to do this once.
-4. Click the Gutter icon in the menu bar → **Grant Access…**, then turn Gutter on under
+2. Click the Gutter icon in the menu bar → **Grant Access…**, then turn Gutter on under
    **System Settings → Privacy & Security → Accessibility**.
 
-Updates keep that access: every release is signed with the same certificate, so macOS
-recognizes the new version as the same app.
+Gutter checks for updates through GitHub, after asking you first. Updates keep that access:
+every release is signed with the same certificate, so macOS recognizes the new version as the
+same app.
 
 ### Why the warning?
 

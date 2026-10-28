@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- Homebrew: `brew install --cask jleitaom/tap/gutter`, kept up to date by the release workflow
 - Update checks with [Sparkle](https://sparkle-project.org): **Check for Updates…** in the right-click menu, and **Check for updates automatically** and **Check Now** in Settings. Sparkle asks before checking on its own, and updates must be signed with the project's key
 - Unit tests for the window-fitting math (margins, coordinates across displays, target frames), run in CI with the right-click menu check and panel snapshots
 
