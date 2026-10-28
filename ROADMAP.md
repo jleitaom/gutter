@@ -10,7 +10,3 @@ Ideas queued for later versions.
   a second one to fit every window on the current display.
 - **Fit only the first window.** Option to fit only an app's first window and let later windows
   keep the size the app remembers.
-
-## Before going public
-
-- **Update checks** via Sparkle (works without a paid Apple account), pointing at GitHub releases.
