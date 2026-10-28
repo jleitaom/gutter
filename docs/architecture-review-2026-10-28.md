@@ -10,7 +10,7 @@ Signal: a file near 600 lines, and parts now used by two screens (panel and Sett
 Proof of same behavior: panel and Settings snapshots (light and dark) and `--menu-test` output
 are byte-identical before and after. Commit `a9c317a`.
 
-## One status for the panel and the menu  [Strong]
+## One status for the panel and the menu  [Done]
 
 Files: `MenuView.swift` (`Status`, `statusText`), `StatusItemController.swift` (`statusText`)
 Signal: the same rule written twice. The panel and the right-click menu each work out
