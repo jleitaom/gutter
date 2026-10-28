@@ -13,6 +13,11 @@ Thanks for helping out!
   - `WindowManager.swift`: Accessibility observers and window fitting
   - `StatusItemController.swift` / `GlassPanel.swift`: the menu bar icon and the glass panel it opens
   - `MenuView.swift`: the panel's content (SwiftUI)
+  - `SettingsView.swift`: the Settings window (⌘,) and its content
+  - `MainMenu.swift`: the hidden main menu that makes ⌘, and ⌘W work in Settings
+  - `UI/`: the parts the panel and Settings share: glass rows and switches (`GlassRows.swift`),
+    the capsule picker and buttons (`CapsuleControls.swift`), and the display preview
+    (`LayoutPreview.swift`)
   - `Preferences.swift`: persisted settings
   - `HotKey.swift`: global shortcut
 - `Sources/GutterKit/` holds the window-fitting math (margins, coordinates, which display a
