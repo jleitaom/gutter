@@ -21,8 +21,16 @@ enum AppInfo {
     static let repositoryURL = URL(string: "https://github.com/jleitaom/gutter")!
 
     static var version: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+        #if DEBUG
+        if let debugVersion { return debugVersion }
+        #endif
+        return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
     }
+
+    #if DEBUG
+    /// Set by `--snapshot --readme`, which runs outside the app bundle.
+    static var debugVersion: String?
+    #endif
 
     /// Template image for the menu bar, matching the "Glass" app icon: a Stage Manager tile
     /// behind a translucent window. Drawn dimmed when auto-fit is paused.

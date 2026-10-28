@@ -42,6 +42,15 @@ enum Snapshot {
         let output = URL(fileURLWithPath: args[index + 1])
         let dark = args.contains("--dark")
 
+        // `--readme` renders the panel for the README screenshot: access granted, Stage Manager
+        // on, and the version and icon from Resources/.
+        if args.contains("--readme") {
+            WindowManager.shared.debugShowAsReady()
+            let plist = NSDictionary(contentsOfFile: "Resources/Info.plist")
+            AppInfo.debugVersion = plist?["CFBundleShortVersionString"] as? String
+            NSApp.applicationIconImage = NSImage(contentsOfFile: "Resources/AppIcon.icns")
+        }
+
         // `--settings` renders the Settings window's content on a plain window background.
         if args.contains("--settings") {
             let view = SettingsView()

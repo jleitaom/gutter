@@ -16,6 +16,16 @@ final class WindowManager: ObservableObject {
     /// True when the shortcut is on but couldn't be registered because another app holds it.
     @Published var hotKeyInUse = false
 
+    #if DEBUG
+    /// For `--snapshot --readme`: show the panel as a set-up user sees it, without the
+    /// Accessibility access that a command line build doesn't have.
+    func debugShowAsReady() {
+        accessibilityGranted = true
+        stageManagerOn = true
+        lastActiveApp = NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == "com.apple.finder" }
+    }
+    #endif
+
     /// What Gutter is doing right now, for the panel header and the right-click menu.
     var status: GutterStatus {
         GutterStatus(accessGranted: accessibilityGranted, autoFit: prefs.autoFit,

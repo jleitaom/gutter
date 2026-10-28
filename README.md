@@ -26,7 +26,12 @@ every window by hand.
 Gutter watches for new windows and fits them to the screen with a margin you choose. The strip
 stays visible on every display, and you never touch a window edge again.
 
-<!-- Add a screenshot of the menu bar panel here: docs/screenshot.png -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/screenshot-dark.png">
+    <img src="docs/screenshot-light.png" width="420" alt="Gutter's menu bar panel: the status, a display picker, a live preview of the gap beside the Stage Manager strip, gap presets, and Fit buttons">
+  </picture>
+</p>
 
 ## Features
 
