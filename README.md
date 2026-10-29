@@ -72,7 +72,7 @@ for it. Instead, every release is built in public by GitHub Actions from the sou
 and you can check that your download matches:
 
 ```sh
-gh attestation verify Gutter-0.1.0.dmg --repo jleitaom/gutter
+gh attestation verify Gutter-0.3.0.dmg --repo jleitaom/gutter
 ```
 
 See [SECURITY.md](SECURITY.md) for details, or build it yourself (below).
@@ -107,10 +107,10 @@ Push a version tag. GitHub Actions builds a universal (Apple Silicon + Intel) ap
 `.dmg`, a `.zip`, checksums and build attestations:
 
 ```sh
-git tag v0.1.0 && git push origin v0.1.0
+git tag v0.3.0 && git push origin v0.3.0
 ```
 
-To package locally: `scripts/package.sh 0.1.0`. To regenerate the icon: `swift scripts/make-icon.swift`.
+To package locally: `scripts/package.sh 0.3.0`. To regenerate the icon: `swift scripts/make-icon.swift`.
 
 ## Contributing
 
