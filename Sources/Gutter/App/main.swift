@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import Combine
+import GutterKit
 
 // Gutter is a pure menu bar app: no SwiftUI App scenes, so macOS never opens an empty
 // window when the app is launched again (e.g. from Spotlight).
@@ -10,7 +11,7 @@ app.delegate = delegate
 app.run()
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var hotKey: HotKey?
+    private var hotKeys: [UInt32: HotKey] = [:]
     private var statusItem: StatusItemController?
     private var cancellables = Set<AnyCancellable>()
 
@@ -24,15 +25,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = StatusItemController()
         _ = Updater.shared // starts Sparkle's scheduled checks
 
-        Preferences.shared.$hotKeyEnabled
+        // ⌃⌥⌘F fits the front window, ⌃⌥⌘D every window; a popup says what was fitted.
+        bindHotKey(id: 1, keyCode: kVK_ANSI_F, enabled: Preferences.shared.$hotKeyEnabled, inUse: \.hotKeyInUse) { [weak self] in
+            self?.statusItem?.showShortcutReport(WindowManager.shared.fitFrontmostWindow())
+        }
+        bindHotKey(id: 2, keyCode: kVK_ANSI_D, enabled: Preferences.shared.$fitAllHotKeyEnabled, inUse: \.fitAllHotKeyInUse) { [weak self] in
+            let manager = WindowManager.shared
+            self?.statusItem?.showShortcutReport(manager.accessibilityGranted ? .fittedAll(count: manager.fitAllWindows()) : .needsAccess)
+        }
+    }
+
+    /// Registers the shortcut whenever its switch is on, and reports when another app holds it.
+    private func bindHotKey(id: UInt32, keyCode: Int, enabled: Published<Bool>.Publisher,
+                            inUse: ReferenceWritableKeyPath<WindowManager, Bool>, action: @escaping () -> Void) {
+        enabled
             .sink { [weak self] enabled in
-                self?.hotKey = nil // unregister first, so re-enabling doesn't collide with ourselves
-                self?.hotKey = enabled
-                    ? HotKey(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(cmdKey | optionKey | controlKey)) {
-                        WindowManager.shared.fitFrontmostWindow()
-                    }
+                self?.hotKeys[id] = nil // unregister first, so re-enabling doesn't collide with ourselves
+                self?.hotKeys[id] = enabled
+                    ? HotKey(id: id, keyCode: UInt32(keyCode), modifiers: UInt32(cmdKey | optionKey | controlKey), action: action)
                     : nil
-                WindowManager.shared.hotKeyInUse = enabled && self?.hotKey == nil
+                WindowManager.shared[keyPath: inUse] = enabled && self?.hotKeys[id] == nil
             }
             .store(in: &cancellables)
     }

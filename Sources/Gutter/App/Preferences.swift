@@ -12,6 +12,9 @@ final class Preferences: ObservableObject {
     @Published var fullWidthWhenStripHidden: Bool { didSet { defaults.set(fullWidthWhenStripHidden, forKey: "fullWidthWhenStripHidden") } }
     @Published var refitOnDisplayChange: Bool { didSet { defaults.set(refitOnDisplayChange, forKey: "refitOnDisplayChange") } }
     @Published var hotKeyEnabled: Bool { didSet { defaults.set(hotKeyEnabled, forKey: "hotKeyEnabled") } }
+    @Published var fitAllHotKeyEnabled: Bool { didSet { defaults.set(fitAllHotKeyEnabled, forKey: "fitAllHotKeyEnabled") } }
+    /// Show what a shortcut fitted in a popup under the menu bar icon.
+    @Published var shortcutPopup: Bool { didSet { defaults.set(shortcutPopup, forKey: "shortcutPopup") } }
 
     /// Margins for displays that haven't been customized yet: always the most recently edited ones.
     @Published var leftMargin: Double { didSet { defaults.set(leftMargin, forKey: "leftMargin") } }
@@ -34,6 +37,8 @@ final class Preferences: ObservableObject {
             "fullWidthWhenStripHidden": true,
             "refitOnDisplayChange": true,
             "hotKeyEnabled": true,
+            "fitAllHotKeyEnabled": true,
+            "shortcutPopup": true,
             "leftMargin": 200.0,
             "topMargin": 0.0,
             "rightMargin": 0.0,
@@ -45,6 +50,8 @@ final class Preferences: ObservableObject {
         fullWidthWhenStripHidden = defaults.bool(forKey: "fullWidthWhenStripHidden")
         refitOnDisplayChange = defaults.bool(forKey: "refitOnDisplayChange")
         hotKeyEnabled = defaults.bool(forKey: "hotKeyEnabled")
+        fitAllHotKeyEnabled = defaults.bool(forKey: "fitAllHotKeyEnabled")
+        shortcutPopup = defaults.bool(forKey: "shortcutPopup")
         leftMargin = defaults.double(forKey: "leftMargin")
         topMargin = defaults.double(forKey: "topMargin")
         rightMargin = defaults.double(forKey: "rightMargin")

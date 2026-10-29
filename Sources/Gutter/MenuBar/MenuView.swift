@@ -128,7 +128,9 @@ struct MenuView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(CapsuleProminentButtonStyle())
-            .help("Fit every window on every display to that display's gap")
+            .help(prefs.fitAllHotKeyEnabled && !manager.fitAllHotKeyInUse
+                  ? "Fit every window on every display to that display's gap (⌃⌥⌘D)"
+                  : "Fit every window on every display to that display's gap")
 
             Button {
                 manager.fitLastActiveWindow()

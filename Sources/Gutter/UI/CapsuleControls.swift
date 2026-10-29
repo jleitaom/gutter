@@ -56,16 +56,24 @@ struct CapsuleProminentButtonStyle: ButtonStyle {
             .foregroundStyle(.white)
             .padding(.vertical, 10)
             .padding(.horizontal, 16)
-            .background {
-                Capsule()
-                    .fill(Color.accentColor)
-                    .overlay(Capsule().fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom)))
-            }
-            .overlay(Capsule().strokeBorder(.white.opacity(0.3), lineWidth: 0.5))
-            .shadow(color: .accentColor.opacity(isEnabled ? 0.35 : 0), radius: 8, y: 3)
+            .background(AccentCapsule(glow: isEnabled))
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
             .opacity(isEnabled ? (configuration.isPressed ? 0.85 : 1) : 0.4)
             .animation(.snappy(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+/// The accent fill of the prominent button and the shortcut popup: a soft top highlight, a hairline
+/// edge and a colored glow.
+struct AccentCapsule: View {
+    var glow = true
+
+    var body: some View {
+        Capsule()
+            .fill(Color.accentColor)
+            .overlay(Capsule().fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom)))
+            .overlay(Capsule().strokeBorder(.white.opacity(0.3), lineWidth: 0.5))
+            .shadow(color: .accentColor.opacity(glow ? 0.35 : 0), radius: 8, y: 3)
     }
 }
 

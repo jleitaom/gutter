@@ -15,7 +15,8 @@ Thanks for helping out!
     work in Settings (`MainMenu.swift`), and version, icon and login item helpers (`AppInfo.swift`)
   - `Windows/`: Accessibility observers and window fitting (`WindowManager.swift`)
   - `MenuBar/`: the menu bar icon and right-click menu (`StatusItemController.swift`), the glass
-    panel it opens (`GlassPanel.swift`) and the panel's content (`MenuView.swift`)
+    panel it opens (`GlassPanel.swift`), the panel's content (`MenuView.swift`), and the popup
+    after a shortcut (`ShortcutPopup.swift`)
   - `Settings/`: the Settings window (⌘,) and its content
   - `UI/`: the parts the panel and Settings share: glass rows and switches (`GlassRows.swift`),
     the capsule picker and buttons (`CapsuleControls.swift`), and the display preview
@@ -41,7 +42,8 @@ Thanks for helping out!
   it finds one (see the README).
 - Check panel changes without the menu bar: `swift run Gutter --snapshot out.png [--dark]` renders it
   to an image, and `swift run Gutter --panel-test` opens the real panel and checks its size, and
-  `swift run Gutter --menu-test` prints the right-click menu.
+  `swift run Gutter --menu-test` prints the right-click menu. `--snapshot out.png --popup` renders every
+  shortcut popup, and `--popup-test` shows the real one under the menu bar icon.
 
 ## Tests
 
@@ -62,7 +64,7 @@ Window behavior depends on real apps and displays, so check these by hand with
 - [ ] With Stage Manager on, a new Finder window and a new Safari window land next to the strip.
 - [ ] With Stage Manager off and "Only with Stage Manager" on, new windows are left alone.
 - [ ] Moving a window to another display fits it to that display's gap.
-- [ ] ⌃⌥⌘F fits the frontmost window; "Fit all windows" reports a count.
+- [ ] ⌃⌥⌘F fits the frontmost window, ⌃⌥⌘D fits every window, a popup under the menu bar icon says what each fitted, and "Fit all windows" reports a count.
 - [ ] An app in "Never resize" is left alone.
 - [ ] With an app paused (`kill -STOP <pid>`), "Fit all windows" returns within a second and the
       panel stays responsive (`kill -CONT <pid>` afterwards).

@@ -13,8 +13,9 @@ final class WindowManager: ObservableObject {
     @Published private(set) var stripHidden = false
     /// The last app that was frontmost, other than Gutter itself.
     @Published private(set) var lastActiveApp: NSRunningApplication?
-    /// True when the shortcut is on but couldn't be registered because another app holds it.
+    /// True when a shortcut is on but couldn't be registered because another app holds it.
     @Published var hotKeyInUse = false
+    @Published var fitAllHotKeyInUse = false
 
     #if DEBUG
     /// For `--snapshot --readme`: show the panel as a set-up user sees it, without the
@@ -240,15 +241,15 @@ final class WindowManager: ObservableObject {
     // MARK: - Fitting
 
     /// Fits the focused window of whatever app is frontmost (used by the hotkey).
-    func fitFrontmostWindow() {
-        guard let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier else { return }
-        fitFocusedWindow(of: pid)
+    func fitFrontmostWindow() -> FitReport {
+        guard let app = NSWorkspace.shared.frontmostApplication else { return .cantFit }
+        return fitFocusedWindow(of: app)
     }
 
     /// Fits the focused window of the app that was active before the menu was opened.
     func fitLastActiveWindow() {
-        guard let pid = lastActiveApp?.processIdentifier else { return }
-        fitFocusedWindow(of: pid)
+        guard let app = lastActiveApp else { return }
+        fitFocusedWindow(of: app)
     }
 
     /// Fits every window of every visible app, each to its own display's margins.
@@ -267,11 +268,15 @@ final class WindowManager: ObservableObject {
         return fitted
     }
 
-    private func fitFocusedWindow(of pid: pid_t) {
-        let app = AXUIElementCreateApplication(pid)
-        if let window = element(app, kAXFocusedWindowAttribute) ?? element(app, kAXMainWindowAttribute) {
-            fit(window)
+    @discardableResult
+    private func fitFocusedWindow(of app: NSRunningApplication) -> FitReport {
+        guard accessibilityGranted else { return .needsAccess }
+        let name = app.localizedName ?? "This app"
+        let axApp = AXUIElementCreateApplication(app.processIdentifier)
+        guard let window = element(axApp, kAXFocusedWindowAttribute) ?? element(axApp, kAXMainWindowAttribute) else {
+            return .noWindow(app: name)
         }
+        return fit(window) ? .fitted(app: name) : .cantFit
     }
 
     @discardableResult
@@ -287,16 +292,25 @@ final class WindowManager: ObservableObject {
         guard let target = WindowGeometry.targetFrame(axVisible: axRect(screen.visibleFrame),
                                                       margins: effectiveMargins(for: screen)) else { return false }
 
+        var pid: pid_t = 0
+        AXUIElementGetPid(window, &pid)
+        defer { remember(window, pid: pid, display: screen.displayUUID) }
+
+        // While it's on, some apps (Chrome, Electron) animate the resize slowly; pause it meanwhile.
+        let app = AXUIElementCreateApplication(pid)
+        let enhanced = bool(app, Self.enhancedUserInterface) == true
+        if enhanced { AXUIElementSetAttributeValue(app, Self.enhancedUserInterface as CFString, kCFBooleanFalse) }
+        defer { if enhanced { AXUIElementSetAttributeValue(app, Self.enhancedUserInterface as CFString, kCFBooleanTrue) } }
+
         // Position, size, position: avoids the window being clamped when it grows past the screen edge.
         setPosition(window, target.origin)
         setSize(window, target.size)
         setPosition(window, target.origin)
-
-        var pid: pid_t = 0
-        AXUIElementGetPid(window, &pid)
-        remember(window, pid: pid, display: screen.displayUUID)
         return true
     }
+
+    /// Set by assistive apps such as VoiceOver.
+    private static let enhancedUserInterface = "AXEnhancedUserInterface"
 
     /// The display's margins (limited to its size), minus the left gap when the Stage Manager strip is hidden.
     func effectiveMargins(for screen: NSScreen) -> Margins {

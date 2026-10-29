@@ -115,21 +115,34 @@ struct SettingsView: View {
             }
             .help("Fit windows again when you move them to another display, or when displays are connected or disconnected.")
             Divider()
-            Row(icon: "keyboard", title: "Shortcut") {
-                if manager.hotKeyInUse {
-                    Label("In use", systemImage: "exclamationmark.triangle.fill")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .help("Another app is using ⌃⌥⌘F. Quit it or change its shortcut, then turn this off and on.")
-                } else {
-                    KeyCap("⌃⌥⌘F")
-                }
-                SmallSwitch(title: "Shortcut", isOn: $prefs.hotKeyEnabled)
+            shortcutRow(icon: "macwindow", title: "Fit window", keys: "⌃⌥⌘F",
+                        inUse: manager.hotKeyInUse, isOn: $prefs.hotKeyEnabled)
+            Divider()
+            shortcutRow(icon: "rectangle.on.rectangle", title: "Fit all windows", keys: "⌃⌥⌘D",
+                        inUse: manager.fitAllHotKeyInUse, isOn: $prefs.fitAllHotKeyEnabled)
+            Divider()
+            Row(icon: "text.bubble", title: "Show a popup after a shortcut") {
+                SmallSwitch(title: "Show a popup after a shortcut", isOn: $prefs.shortcutPopup)
             }
+            .help("Say what was fitted, just below the menu bar icon.")
             Divider()
             Row(icon: "power", title: "Open at login") {
                 SmallSwitch(title: "Open at login", isOn: Binding(get: { launchAtLogin }, set: { setLaunchAtLogin($0) }))
             }
+        }
+    }
+
+    private func shortcutRow(icon: String, title: String, keys: String, inUse: Bool, isOn: Binding<Bool>) -> some View {
+        Row(icon: icon, title: title) {
+            if inUse {
+                Label("In use", systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .help("Another app is using \(keys). Quit it or change its shortcut, then turn this off and on.")
+            } else {
+                KeyCap(keys)
+            }
+            SmallSwitch(title: title, isOn: isOn)
         }
     }
 

@@ -38,7 +38,7 @@ stays visible on every display, and you never touch a window edge again.
 - **Auto-fit new windows** on whichever display they open on
 - **Adjustable margins** (left, top, right, bottom) with a live preview and presets
 - **Only with Stage Manager**: does nothing while Stage Manager is off
-- **⌃⌥⌘F** fits the current window on demand
+- **⌃⌥⌘F** fits the current window on demand, and **⌃⌥⌘D** fits every window, with a popup saying what was fitted
 - **Never resize** list for apps you'd rather leave alone
 - **Launch at login**
 - **Settings window** (⌘,) for the options you set once
