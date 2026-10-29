@@ -1,5 +1,6 @@
 #if DEBUG
 import AppKit
+import GutterKit
 import SwiftUI
 
 /// Development helper: `swift run Gutter --snapshot out.png [--dark]` renders the menu panel
@@ -38,6 +39,18 @@ enum Snapshot {
             return true
         }
 
+        if args.contains("--popup-test") {
+            // Shows the real popup under the menu bar icon and prints where both are.
+            let controller = StatusItemController()
+            panelTestController = controller
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                let (icon, popup) = controller.debugShowShortcutReport(.fittedAll(count: 7))
+                print("icon at \(icon), popup at \(popup)")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { exit(popup.width > 50 ? 0 : 1) }
+            }
+            return true
+        }
+
         guard let index = args.firstIndex(of: "--snapshot"), index + 1 < args.count else { return false }
         let output = URL(fileURLWithPath: args[index + 1])
         let dark = args.contains("--dark")
@@ -57,6 +70,19 @@ enum Snapshot {
                 .environmentObject(Preferences.shared)
                 .environmentObject(WindowManager.shared)
                 .background(Color(nsColor: .windowBackgroundColor))
+            return render(view, to: output, dark: dark)
+        }
+
+        // `--popup` renders every shortcut popup over the desktop gradient.
+        if args.contains("--popup") {
+            let reports: [FitReport] = [.fitted(app: "Safari"), .fittedAll(count: 7), .fittedAll(count: 0),
+                                        .noWindow(app: "Finder"), .cantFit, .needsAccess]
+            let view = VStack(alignment: .trailing, spacing: 0) {
+                ForEach(reports, id: \.title) { ShortcutPopupView(report: $0) }
+            }
+            .padding(20)
+            .background(LinearGradient(colors: [Color(red: 0.95, green: 0.72, blue: 0.52), Color(red: 0.25, green: 0.38, blue: 0.59)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing))
             return render(view, to: output, dark: dark)
         }
 

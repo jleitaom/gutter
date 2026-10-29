@@ -7,6 +7,7 @@ import SwiftUI
 final class StatusItemController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let panel = GlassPanel()
+    private let shortcutPopup = ShortcutPopup()
     private var hostingView: NSHostingView<AnyView>?
     private var outsideClickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
@@ -75,6 +76,10 @@ final class StatusItemController: NSObject {
         // Fitting
         let fitAll = ActionItem("Fit All Windows") { manager.fitAllWindows() }
         fitAll.isEnabled = manager.accessibilityGranted
+        if prefs.fitAllHotKeyEnabled && !manager.fitAllHotKeyInUse {
+            fitAll.keyEquivalent = "d"
+            fitAll.keyEquivalentModifierMask = [.control, .option, .command]
+        }
         menu.addItem(fitAll)
         if let app = manager.lastActiveApp, let name = app.localizedName {
             let fitOne = ActionItem("Fit \(name) Window") { manager.fitLastActiveWindow() }
@@ -162,6 +167,17 @@ final class StatusItemController: NSObject {
         "Gutter · \(WindowManager.shared.status.title)"
     }
 
+    /// Says what a shortcut did, under the menu bar icon, unless the popup is turned off or the
+    /// panel is open (it covers the same spot).
+    func showShortcutReport(_ report: FitReport) {
+        guard Preferences.shared.shortcutPopup, !(panel.isVisible && panel.alphaValue > 0) else { return }
+        var anchor: NSRect?
+        if let button = statusItem.button, let window = button.window {
+            anchor = window.convertToScreen(button.convert(button.bounds, to: nil))
+        }
+        shortcutPopup.show(report, below: anchor)
+    }
+
     func openPanel() {
         showPanel()
     }
@@ -196,6 +212,13 @@ final class StatusItemController: NSObject {
     }
 
     #if DEBUG
+    /// Shows the shortcut popup and returns the icon's and the popup's frames, for `--popup-test`.
+    func debugShowShortcutReport(_ report: FitReport) -> (icon: NSRect, popup: NSRect) {
+        showShortcutReport(report)
+        guard let button = statusItem.button, let window = button.window else { return (.zero, shortcutPopup.frame) }
+        return (window.convertToScreen(button.convert(button.bounds, to: nil)), shortcutPopup.frame)
+    }
+
     /// Opens the panel and returns its frame, for `--panel-test`.
     func debugOpenPanel() -> NSRect {
         showPanel()

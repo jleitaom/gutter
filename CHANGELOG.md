@@ -5,6 +5,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- **⌃⌥⌘D** fits every window, like **Fit all windows** in the panel. It has its own switch in Settings, next to ⌃⌥⌘F
+- After either shortcut, a popup under the menu bar icon says what was fitted ("Fitted Safari", "Fitted 7 windows"), or why nothing was. Turn it off with **Show a popup after a shortcut** in Settings
+
+### Fixed
+
+- Chrome and other Electron apps no longer play a slow, choppy animation when Gutter resizes their windows
+
 ## [0.2.0] - 2026-10-28
 
 First public release.
