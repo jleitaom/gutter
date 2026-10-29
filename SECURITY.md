@@ -20,10 +20,10 @@ by Apple (the project doesn't use a paid developer account), so you can verify t
 
 ```sh
 # 1. Check the file was built by this repo's release workflow
-gh attestation verify Gutter-0.1.0.dmg --repo jleitaom/gutter
+gh attestation verify Gutter-0.3.0.dmg --repo jleitaom/gutter
 
 # 2. Or compare the checksum with SHA256SUMS.txt from the release page
-shasum -a 256 Gutter-0.1.0.dmg
+shasum -a 256 Gutter-0.3.0.dmg
 ```
 
 Or skip downloads entirely and build from source with `./build.sh`.
