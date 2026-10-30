@@ -143,7 +143,7 @@ struct MenuView: View {
             .buttonStyle(CapsuleSecondaryButtonStyle())
             .fixedSize()
             .help(prefs.hotKeyEnabled && !manager.hotKeyInUse ? "Fit only this window (⌃⌥⌘F)" : "Fit only this window")
-            .disabled(manager.lastActiveApp == nil)
+            .disabled(manager.lastActiveApp == nil || manager.isExcluded(manager.lastActiveApp))
         }
         .disabled(!manager.accessibilityGranted)
     }

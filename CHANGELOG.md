@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Fixed
+
+- ⌃⌥⌘F no longer resizes apps in **Never resize**; the popup says so instead. **Fit** in the panel and the right-click menu are greyed out for them
+
 ## [0.3.0] - 2026-10-29
 
 ### Added
