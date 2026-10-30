@@ -231,11 +231,13 @@ final class WindowManager: ObservableObject {
         if prefs.onlyWithStageManager && !Self.isStageManagerOn() { return false }
         var pid: pid_t = 0
         AXUIElementGetPid(window, &pid)
-        if let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier,
-           prefs.excludedBundleIDs.contains(bundleID) {
-            return false
-        }
-        return true
+        return !isExcluded(NSRunningApplication(processIdentifier: pid))
+    }
+
+    /// Whether the app is in "Never resize", which every way of fitting respects.
+    func isExcluded(_ app: NSRunningApplication?) -> Bool {
+        guard let bundleID = app?.bundleIdentifier else { return false }
+        return prefs.excludedBundleIDs.contains(bundleID)
     }
 
     // MARK: - Fitting
@@ -260,7 +262,7 @@ final class WindowManager: ObservableObject {
         var fitted = 0
         for app in NSWorkspace.shared.runningApplications
         where app.activationPolicy == .regular && !app.isHidden && app.processIdentifier != getpid() {
-            if let bundleID = app.bundleIdentifier, prefs.excludedBundleIDs.contains(bundleID) { continue }
+            if isExcluded(app) { continue }
             for window in windows(of: app.processIdentifier) where fit(window) {
                 fitted += 1
             }
@@ -272,6 +274,7 @@ final class WindowManager: ObservableObject {
     private func fitFocusedWindow(of app: NSRunningApplication) -> FitReport {
         guard accessibilityGranted else { return .needsAccess }
         let name = app.localizedName ?? "This app"
+        guard !isExcluded(app) else { return .excluded(app: name) }
         let axApp = AXUIElementCreateApplication(app.processIdentifier)
         guard let window = element(axApp, kAXFocusedWindowAttribute) ?? element(axApp, kAXMainWindowAttribute) else {
             return .noWindow(app: name)
