@@ -226,9 +226,14 @@ final class WindowManager: ObservableObject {
         }
     }
 
+    /// True when "Only with Stage Manager" is on and Stage Manager is off, so neither
+    /// auto-fit nor the shortcuts resize anything.
+    var waitingForStageManager: Bool {
+        prefs.onlyWithStageManager && !Self.isStageManagerOn()
+    }
+
     private func shouldAutoFit(_ window: AXUIElement) -> Bool {
-        guard prefs.autoFit else { return false }
-        if prefs.onlyWithStageManager && !Self.isStageManagerOn() { return false }
+        guard prefs.autoFit, !waitingForStageManager else { return false }
         var pid: pid_t = 0
         AXUIElementGetPid(window, &pid)
         return !isExcluded(NSRunningApplication(processIdentifier: pid))
@@ -242,10 +247,19 @@ final class WindowManager: ObservableObject {
 
     // MARK: - Fitting
 
-    /// Fits the focused window of whatever app is frontmost (used by the hotkey).
+    /// Fits the focused window of whatever app is frontmost (⌃⌥⌘F).
     func fitFrontmostWindow() -> FitReport {
+        guard accessibilityGranted else { return .needsAccess }
+        guard !waitingForStageManager else { return .stageManagerOff }
         guard let app = NSWorkspace.shared.frontmostApplication else { return .cantFit }
         return fitFocusedWindow(of: app)
+    }
+
+    /// Fits every window (⌃⌥⌘D).
+    func fitAllWindowsFromShortcut() -> FitReport {
+        guard accessibilityGranted else { return .needsAccess }
+        guard !waitingForStageManager else { return .stageManagerOff }
+        return .fittedAll(count: fitAllWindows())
     }
 
     /// Fits the focused window of the app that was active before the menu was opened.

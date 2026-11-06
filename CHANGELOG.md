@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Fixed
+
+- ⌃⌥⌘F and ⌃⌥⌘D no longer resize windows while Stage Manager is off and **Only with Stage Manager** is on; the popup says "Stage Manager is off" instead
+
 ## [0.3.1] - 2026-10-30
 
 ### Fixed

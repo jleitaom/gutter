@@ -30,8 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.statusItem?.showShortcutReport(WindowManager.shared.fitFrontmostWindow())
         }
         bindHotKey(id: 2, keyCode: kVK_ANSI_D, enabled: Preferences.shared.$fitAllHotKeyEnabled, inUse: \.fitAllHotKeyInUse) { [weak self] in
-            let manager = WindowManager.shared
-            self?.statusItem?.showShortcutReport(manager.accessibilityGranted ? .fittedAll(count: manager.fitAllWindows()) : .needsAccess)
+            self?.statusItem?.showShortcutReport(WindowManager.shared.fitAllWindowsFromShortcut())
         }
     }
 
