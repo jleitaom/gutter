@@ -11,6 +11,8 @@ public enum FitReport: Equatable, Sendable {
     /// The window can't be resized: full screen, minimized, fixed size, or too small a display.
     case cantFit
     case needsAccess
+    /// "Only with Stage Manager" is on and Stage Manager is off.
+    case stageManagerOff
 
     public var title: String {
         switch self {
@@ -21,6 +23,7 @@ public enum FitReport: Equatable, Sendable {
         case .noWindow(let app): "\(app) has no window to fit"
         case .cantFit: "Can’t fit this window"
         case .needsAccess: "Gutter needs Accessibility access"
+        case .stageManagerOff: "Stage Manager is off"
         }
     }
 
@@ -29,7 +32,7 @@ public enum FitReport: Equatable, Sendable {
         switch self {
         case .fitted: true
         case .fittedAll(let count): count > 0
-        case .excluded, .noWindow, .cantFit, .needsAccess: false
+        case .excluded, .noWindow, .cantFit, .needsAccess, .stageManagerOff: false
         }
     }
 }

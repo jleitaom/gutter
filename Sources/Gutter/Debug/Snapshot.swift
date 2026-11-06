@@ -76,7 +76,7 @@ enum Snapshot {
         // `--popup` renders every shortcut popup over the desktop gradient.
         if args.contains("--popup") {
             let reports: [FitReport] = [.fitted(app: "Safari"), .fittedAll(count: 7), .fittedAll(count: 0), .excluded(app: "Calculator"),
-                                        .noWindow(app: "Finder"), .cantFit, .needsAccess]
+                                        .noWindow(app: "Finder"), .cantFit, .needsAccess, .stageManagerOff]
             let view = VStack(alignment: .trailing, spacing: 0) {
                 ForEach(reports, id: \.title) { ShortcutPopupView(report: $0) }
             }

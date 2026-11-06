@@ -13,6 +13,7 @@ struct FitReportTests {
         (.noWindow(app: "Finder"), "Finder has no window to fit", false),
         (.cantFit, "Can’t fit this window", false),
         (.needsAccess, "Gutter needs Accessibility access", false),
+        (.stageManagerOff, "Stage Manager is off", false),
     ])
     func report(_ report: FitReport, title: String, succeeded: Bool) {
         #expect(report.title == title)
