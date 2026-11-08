@@ -124,8 +124,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Casks/gutter.rb
-          git commit -m "gutter $version"
-          git push
+          # Re-running a release with the same zip leaves the cask as it is.
+          if git diff --cached --quiet; then echo "Cask already up to date"; else
+            git commit -m "gutter $version"
+            git push
+          fi
           rm -f "$key"
 
       - name: Upload dry-run build

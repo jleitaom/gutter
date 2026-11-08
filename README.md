@@ -50,11 +50,12 @@ stays visible on every display, and you never touch a window edge again.
 With [Homebrew](https://brew.sh):
 
 ```sh
+brew trust jleitaom/tap        # Homebrew asks you to trust taps outside its own, once
 brew install --cask jleitaom/tap/gutter
 ```
 
 Or download `Gutter-x.y.z.dmg` from the [latest release](https://github.com/jleitaom/gutter/releases/latest)
-and drag **Gutter** into **Applications**. Then:
+and drag **Gutter** into **Applications**. Either way, then:
 
 1. Open Gutter. macOS will say it can't verify the app. Open **System Settings → Privacy & Security**, scroll
    down and click **Open Anyway**. You only need to do this once.
